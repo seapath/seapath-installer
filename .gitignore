@@ -55,3 +55,7 @@ CMakeLists.txt.user
 # Kate
 *.kate-swp
 tags
+
+debian/usr/*
+seapath-installer*/
+*.deb
