@@ -1,0 +1,10 @@
+[project]
+org='seapath'
+name='seapath-installer'
+
+[build]
+command='./build.sh'
+flavors='sfl_ci'
+
+[sfl_ci]
+command='./build.sh'
