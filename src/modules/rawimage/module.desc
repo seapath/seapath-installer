@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2025 Savoir-faire Linux, Inc.
+# SPDX-License-Identifier: CC0-1.0
+# Module metadata file for rawimage copy jobmodule
+# Syntax is YAML 1.2
+---
+type:       "job"
+name:       "rawimage"
+interface:  "python"
+script:     "main.py"
