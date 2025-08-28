@@ -1,0 +1,35 @@
+Package: seapath-installer
+Version: 1.0
+Architecture: all
+Essential: no
+Priority: optional
+Depends: os-prober,
+		kpackagetool5,
+		libboost-python1.74.0 (>= 1.74.0),
+		libboost-python1.74.0-py311,
+		libc6 (>= 2.34),
+		libcrypt1 (>= 1:4.1.0),
+		libgcc-s1 (>= 3.0),
+		libkf5configcore5 (>= 4.97.0),
+		libkf5coreaddons5 (>= 5.96.0),
+		libkf5package5 (>= 5.5.0+git),
+		libkf5parts5 (>= 4.96.0),
+		libkpmcore12 (>= 22.04.3),
+		libparted2 (>= 3.1),
+		libpwquality1 (>= 1.1.0),
+		libpython3.11 (>= 3.11.0),
+		libqt5core5a (>= 5.15.1),
+		libqt5dbus5 (>= 5.14.1),
+		libqt5gui5 (>= 5.14.1) | libqt5gui5-gles (>= 5.14.1),
+		libqt5network5 (>= 5.0.2),
+		libqt5qml5 (>= 5.10.0),
+		libqt5quick5 (>= 5.0.2) | libqt5quick5-gles (>= 5.0.2),
+		libqt5quickwidgets5 (>= 5.3.0),
+		libqt5svg5 (>= 5.6.0~beta),
+		libqt5webkit5 (>= 5.212.0~alpha3),
+		libqt5widgets5 (>= 5.15.1),
+		libqt5xml5 (>= 5.0.2),
+		libstdc++6 (>= 9),
+		libyaml-cpp0.7 (>= 0.7.0)
+Maintainer: Savoir-faire Linux
+Description: A UI installer to install SEAPATH distribution, based on the Calamares installer framework
