@@ -78,7 +78,7 @@ set(CALAMARES_SOVERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
 
 ### OPTIONS
 #
-option(INSTALL_POLKIT "Install Polkit configuration" ON)
+option(INSTALL_POLKIT "Install Polkit configuration" OFF)
 option(INSTALL_COMPLETION "Install shell completions" OFF)
 option(INSTALL_CONFIG "Install configuration files" OFF)
 # When adding WITH_* that affects the ABI offered by libcalamares,
