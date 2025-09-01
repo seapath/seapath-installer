@@ -30,6 +30,7 @@ Depends: os-prober,
 		libqt5widgets5 (>= 5.15.1),
 		libqt5xml5 (>= 5.0.2),
 		libstdc++6 (>= 9),
-		libyaml-cpp0.7 (>= 0.7.0)
+		libyaml-cpp0.7 (>= 0.7.0),
+		efibootmgr (>=17-2)
 Maintainer: Savoir-faire Linux
 Description: A UI installer to install SEAPATH distribution, based on the Calamares installer framework
