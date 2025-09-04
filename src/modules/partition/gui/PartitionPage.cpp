@@ -23,9 +23,7 @@
 #include "core/PartitionCoreModule.h"
 #include "core/PartitionInfo.h"
 #include "core/PartitionModel.h"
-#include "gui/CreatePartitionDialog.h"
 #include "gui/CreateVolumeGroupDialog.h"
-#include "gui/EditExistingPartitionDialog.h"
 #include "gui/ResizeVolumeGroupDialog.h"
 #include "gui/ScanningDialog.h"
 
@@ -409,15 +407,6 @@ PartitionPage::onCreateClicked()
     {
         return;
     }
-
-    QPointer< CreatePartitionDialog > dlg = new CreatePartitionDialog(
-        m_core, model->device(), CreatePartitionDialog::FreeSpace { partition }, getCurrentUsedMountpoints(), this );
-    if ( dlg->exec() == QDialog::Accepted )
-    {
-        Partition* newPart = dlg->getNewlyCreatedPartition();
-        m_core->createPartition( model->device(), newPart, dlg->newFlags() );
-    }
-    delete dlg;
 }
 
 void
@@ -513,16 +502,6 @@ PartitionPage::updatePartitionToCreate( Device* device, Partition* partition )
 {
     QStringList mountPoints = getCurrentUsedMountpoints();
     mountPoints.removeOne( PartitionInfo::mountPoint( partition ) );
-
-    QPointer< CreatePartitionDialog > dlg
-        = new CreatePartitionDialog( m_core, device, CreatePartitionDialog::FreshPartition { partition }, mountPoints, this );
-    if ( dlg->exec() == QDialog::Accepted )
-    {
-        Partition* newPartition = dlg->getNewlyCreatedPartition();
-        m_core->deletePartition( device, partition );
-        m_core->createPartition( device, newPartition, dlg->newFlags() );
-    }
-    delete dlg;
 }
 
 void
@@ -530,14 +509,6 @@ PartitionPage::editExistingPartition( Device* device, Partition* partition )
 {
     QStringList mountPoints = getCurrentUsedMountpoints();
     mountPoints.removeOne( PartitionInfo::mountPoint( partition ) );
-
-    QPointer< EditExistingPartitionDialog > dlg
-        = new EditExistingPartitionDialog( m_core, device, partition, mountPoints, this );
-    if ( dlg->exec() == QDialog::Accepted )
-    {
-        dlg->applyChanges( m_core );
-    }
-    delete dlg;
 
     updateBootLoaderInstallPath();
 }

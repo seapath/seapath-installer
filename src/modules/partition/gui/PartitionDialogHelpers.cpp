@@ -13,7 +13,6 @@
 
 #include "core/PartUtils.h"
 #include "core/PartitionCoreModule.h"
-#include "gui/CreatePartitionDialog.h"
 
 #include "GlobalStorage.h"
 #include "JobQueue.h"
@@ -89,68 +88,49 @@ validateMountPoint( PartitionCoreModule* core, const QString& mountPoint, const 
     QString msg;
     bool ok = true;
 
-    if ( inUse.contains( mountPoint ) )
+    // Validate the chosen filesystem + mountpoint combination.
+    FileSystem::Type selectedFsType;
+    PartUtils::canonicalFilesystemName( fileSystem, &selectedFsType );
+    bool fsTypeIsAllowed = false;
+    if ( selectedFsType == FileSystem::Type::Unknown )
     {
-        msg = CreatePartitionDialog::tr( "Mountpoint already in use. Please select another one.", "@info" );
-        ok = false;
+        fsTypeIsAllowed = true;
     }
-    else if ( !mountPoint.isEmpty() && !mountPoint.startsWith( '/' ) )
+    else
     {
-        msg = CreatePartitionDialog::tr( "Mountpoint must start with a <tt>/</tt>.", "@info" );
-        ok = false;
-    } else {
-        // Validate the chosen filesystem + mountpoint combination.
-        FileSystem::Type selectedFsType;
-        PartUtils::canonicalFilesystemName( fileSystem, &selectedFsType );
-        bool fsTypeIsAllowed = false;
-        if ( selectedFsType == FileSystem::Type::Unknown )
+        QList< FileSystem::Type > anyAllowedFsTypes = core->dirFSRestrictLayout().anyAllowedFSTypes();
+        for ( auto& anyAllowedFsType : anyAllowedFsTypes )
         {
-            fsTypeIsAllowed = true;
-        }
-        else
-        {
-            QList< FileSystem::Type > anyAllowedFsTypes = core->dirFSRestrictLayout().anyAllowedFSTypes();
-            for ( auto& anyAllowedFsType : anyAllowedFsTypes )
+            if ( selectedFsType == anyAllowedFsType )
             {
-                if ( selectedFsType == anyAllowedFsType )
-                {
-                    fsTypeIsAllowed = true;
-                    break;
-                }
+                fsTypeIsAllowed = true;
+                break;
             }
         }
+    }
 
-        bool fsTypeIsAllowedForMountPoint = false;
-        // We allow arbitrary unmountable filesystems here since an
-        // unmountable filesystem has no mount point associated with it, thus
-        // any filesystem restriction we'd find at this point would be
-        // irrelevant.
-        if ( selectedFsType == FileSystem::Type::Unknown || s_unmountableFS.contains( selectedFsType ) )
+    bool fsTypeIsAllowedForMountPoint = false;
+    // We allow arbitrary unmountable filesystems here since an
+    // unmountable filesystem has no mount point associated with it, thus
+    // any filesystem restriction we'd find at this point would be
+    // irrelevant.
+    if ( selectedFsType == FileSystem::Type::Unknown || s_unmountableFS.contains( selectedFsType ) )
+    {
+        fsTypeIsAllowedForMountPoint = true;
+    }
+    else
+    {
+        QList< FileSystem::Type > allowedFsTypes = core->dirFSRestrictLayout().allowedFSTypes( mountPoint, inUse, false );
+        for ( auto& allowedFsType : allowedFsTypes )
         {
-            fsTypeIsAllowedForMountPoint = true;
-        }
-        else
-        {
-            QList< FileSystem::Type > allowedFsTypes = core->dirFSRestrictLayout().allowedFSTypes( mountPoint, inUse, false );
-            for ( auto& allowedFsType : allowedFsTypes )
+            if ( selectedFsType == allowedFsType )
             {
-                if ( selectedFsType == allowedFsType )
-                {
-                    fsTypeIsAllowedForMountPoint = true;
-                    break;
-                }
+                fsTypeIsAllowedForMountPoint = true;
+                break;
             }
         }
-
-        if ( !fsTypeIsAllowed ) {
-            msg = CreatePartitionDialog::tr( "Filesystem is prohibited by this distro. Consider selecting another one.", "@info" );
-            ok = true;
-        }
-        else if ( !fsTypeIsAllowedForMountPoint ) {
-            msg = CreatePartitionDialog::tr( "Filesystem is prohibited for use on this mountpoint. Consider selecting a different filesystem or mountpoint.", "@info" );
-            ok = true;
-        }
     }
+
 
     if ( label )
     {

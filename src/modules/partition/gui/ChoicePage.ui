@@ -17,7 +17,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
   <property name="windowTitle">
    <string notr="true">Form</string>
   </property>
-  <layout class="QVBoxLayout" name="m_mainLayout" stretch="0,1">
+  <layout class="QVBoxLayout" name="m_mainLayout" stretch="0,0">
    <property name="bottomMargin">
     <number>0</number>
    </property>
@@ -36,7 +36,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     </layout>
    </item>
    <item>
-    <layout class="QVBoxLayout" name="m_rightLayout" stretch="0,1,0,0,0,0,0">
+    <layout class="QVBoxLayout" name="m_rightLayout" stretch="0,1,0,0,0,0">
      <item>
       <widget class="QLabel" name="m_messageLabel">
        <property name="toolTip">
@@ -66,8 +66,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>729</width>
-          <height>233</height>
+          <width>723</width>
+          <height>334</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="m_itemsLayout">
@@ -86,19 +86,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
         </layout>
        </widget>
       </widget>
-     </item>
-     <item>
-      <widget class="QFrame" name="hLine">
-       <property name="frameShape">
-        <enum>QFrame::HLine</enum>
-       </property>
-       <property name="frameShadow">
-        <enum>QFrame::Raised</enum>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="EncryptWidget" name="m_encryptWidget" native="true"/>
      </item>
      <item>
       <widget class="QCheckBox" name="m_reuseHomeCheckBox">
@@ -211,14 +198,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
    </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>EncryptWidget</class>
-   <extends>QWidget</extends>
-   <header>gui/EncryptWidget.h</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>

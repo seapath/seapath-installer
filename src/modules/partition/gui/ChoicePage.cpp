@@ -75,22 +75,15 @@ ChoicePage::ChoicePage( Config* config, QWidget* parent )
     , m_core( nullptr )
     , m_isEfi( false )
     , m_grp( nullptr )
-    , m_alongsideButton( nullptr )
-    , m_eraseButton( nullptr )
-    , m_replaceButton( nullptr )
-    , m_somethingElseButton( nullptr )
     , m_eraseSwapChoiceComboBox( nullptr )
     , m_deviceInfoWidget( nullptr )
     , m_beforePartitionBarsView( nullptr )
     , m_beforePartitionLabelsView( nullptr )
     , m_bootloaderComboBox( nullptr )
-    , m_enableEncryptionWidget( true )
 {
     setupUi( this );
 
     auto gs = Calamares::JobQueue::instance()->globalStorage();
-
-    m_enableEncryptionWidget = gs->value( "enableLuksAutomatedPartitioning" ).toBool();
 
     // Set up drives combo
     m_mainLayout->setDirection( QBoxLayout::TopToBottom );
@@ -121,9 +114,10 @@ ChoicePage::ChoicePage( Config* config, QWidget* parent )
 
     m_previewBeforeFrame->setSizePolicy( QSizePolicy::Preferred, QSizePolicy::Expanding );
     m_previewAfterFrame->setSizePolicy( QSizePolicy::Preferred, QSizePolicy::Expanding );
+    m_previewBeforeLabel->hide();
+    m_previewBeforeFrame->hide();
     m_previewAfterLabel->hide();
     m_previewAfterFrame->hide();
-    m_encryptWidget->hide();
     m_reuseHomeCheckBox->hide();
     gs->insert( "reuseHome", false );
 
@@ -141,7 +135,6 @@ ChoicePage::retranslate()
     m_previewAfterLabel->setText( tr( "After:", "@label" ) );
 
     updateSwapChoicesTr();
-    updateChoiceButtonsTr();
     updateActionDescriptionsTr();
 }
 
@@ -188,7 +181,6 @@ ChoicePage::init( PartitionCoreModule* core )
     setModelToComboBox( m_drivesCombo, core->deviceModel() );
 
     connect( m_drivesCombo, qOverload< int >( &QComboBox::currentIndexChanged ), this, &ChoicePage::applyDeviceChoice );
-    connect( m_encryptWidget, &EncryptWidget::stateChanged, this, &ChoicePage::onEncryptWidgetStateChanged );
     connect(
         m_reuseHomeCheckBox, Calamares::checkBoxStateChangedSignal, this, &ChoicePage::onHomeCheckBoxStateChanged );
 
@@ -255,29 +247,10 @@ ChoicePage::setupChoices()
     QSize iconSize( Calamares::defaultIconSize().width() * 2, Calamares::defaultIconSize().height() * 2 );
     m_grp = new QButtonGroup( this );
 
-    m_alongsideButton = new PrettyRadioButton;
-    m_alongsideButton->setIconSize( iconSize );
-    m_alongsideButton->setIcon(
-        Calamares::defaultPixmap( Calamares::PartitionAlongside, Calamares::Original, iconSize ) );
-    m_alongsideButton->addToGroup( m_grp, InstallChoice::Alongside );
-
-    m_eraseButton = new PrettyRadioButton;
-    m_eraseButton->setIconSize( iconSize );
-    m_eraseButton->setIcon( Calamares::defaultPixmap( Calamares::PartitionEraseAuto, Calamares::Original, iconSize ) );
-    m_eraseButton->addToGroup( m_grp, InstallChoice::Erase );
-
-    m_replaceButton = new PrettyRadioButton;
-
-    m_replaceButton->setIconSize( iconSize );
-    m_replaceButton->setIcon(
-        Calamares::defaultPixmap( Calamares::PartitionReplaceOs, Calamares::Original, iconSize ) );
-    m_replaceButton->addToGroup( m_grp, InstallChoice::Replace );
-
     // Fill up swap options
     if ( m_config->swapChoices().count() > 1 )
     {
         m_eraseSwapChoiceComboBox = createCombo( m_config->swapChoices(), m_config->swapChoice() );
-        m_eraseButton->addOptionsComboBox( m_eraseSwapChoiceComboBox );
     }
 
     if ( m_config->eraseFsTypes().count() > 1 )
@@ -287,7 +260,6 @@ ChoicePage::setupChoices()
         connect(
             m_eraseFsTypesChoiceComboBox, &QComboBox::currentTextChanged, m_config, &Config::setEraseFsTypeChoice );
         connect( m_config, &Config::eraseModeFilesystemChanged, this, &ChoicePage::onActionChanged );
-        m_eraseButton->addOptionsComboBox( m_eraseFsTypesChoiceComboBox );
 
         // Also offer it for "replace
         m_replaceFsTypesChoiceComboBox = new QComboBox;
@@ -297,19 +269,7 @@ ChoicePage::setupChoices()
                  m_config,
                  &Config::setReplaceFilesystemChoice );
         connect( m_config, &Config::replaceModeFilesystemChanged, this, &ChoicePage::onActionChanged );
-        m_replaceButton->addOptionsComboBox( m_replaceFsTypesChoiceComboBox );
     }
-
-    m_itemsLayout->addWidget( m_alongsideButton );
-    m_itemsLayout->addWidget( m_replaceButton );
-    m_itemsLayout->addWidget( m_eraseButton );
-
-    m_somethingElseButton = new PrettyRadioButton;
-    m_somethingElseButton->setIconSize( iconSize );
-    m_somethingElseButton->setIcon(
-        Calamares::defaultPixmap( Calamares::PartitionManual, Calamares::Original, iconSize ) );
-    m_itemsLayout->addWidget( m_somethingElseButton );
-    m_somethingElseButton->addToGroup( m_grp, InstallChoice::Manual );
 
     m_itemsLayout->addStretch();
 
@@ -352,7 +312,6 @@ ChoicePage::setupChoices()
     }
 
     updateSwapChoicesTr();
-    updateChoiceButtonsTr();
 }
 
 /**
@@ -370,24 +329,10 @@ ChoicePage::selectedDevice()
 }
 
 void
-ChoicePage::hideButtons()
-{
-    m_eraseButton->hide();
-    m_replaceButton->hide();
-    m_alongsideButton->hide();
-    m_somethingElseButton->hide();
-}
-
-void
 ChoicePage::checkInstallChoiceRadioButton( InstallChoice c )
 {
     QSignalBlocker b( m_grp );
     m_grp->setExclusive( false );
-    // If c == InstallChoice::NoChoice none will match and all are deselected
-    m_eraseButton->setChecked( InstallChoice::Erase == c );
-    m_replaceButton->setChecked( InstallChoice::Replace == c );
-    m_alongsideButton->setChecked( InstallChoice::Alongside == c );
-    m_somethingElseButton->setChecked( InstallChoice::Manual == c );
     m_grp->setExclusive( true );
 }
 
@@ -401,12 +346,6 @@ ChoicePage::checkInstallChoiceRadioButton( InstallChoice c )
 void
 ChoicePage::applyDeviceChoice()
 {
-    if ( !selectedDevice() )
-    {
-        hideButtons();
-        return;
-    }
-
     if ( m_core->isDirty() )
     {
         ScanningDialog::run(
@@ -428,17 +367,6 @@ ChoicePage::applyDeviceChoice()
 void
 ChoicePage::continueApplyDeviceChoice()
 {
-    Device* currd = selectedDevice();
-
-    // The device should only be nullptr immediately after a PCM reset.
-    // applyDeviceChoice() will be called again momentarily as soon as we handle the
-    // PartitionCoreModule::reverted signal.
-    if ( !currd )
-    {
-        hideButtons();
-        return;
-    }
-
     updateDeviceStatePreview();
 
     // Preview setup done. Now we show/hide choices as needed.
@@ -459,18 +387,6 @@ ChoicePage::continueApplyDeviceChoice()
 void
 ChoicePage::onActionChanged()
 {
-    if ( m_enableEncryptionWidget )
-    {
-        if ( m_config->installChoice() == InstallChoice::Erase && m_eraseFsTypesChoiceComboBox )
-        {
-            m_encryptWidget->setFilesystem( FileSystem::typeForName( m_eraseFsTypesChoiceComboBox->currentText() ) );
-        }
-        else if ( m_config->installChoice() == InstallChoice::Replace && m_replaceFsTypesChoiceComboBox )
-        {
-            m_encryptWidget->setFilesystem( FileSystem::typeForName( m_replaceFsTypesChoiceComboBox->currentText() ) );
-        }
-    }
-
     Device* currd = selectedDevice();
     if ( currd )
     {
@@ -503,16 +419,6 @@ ChoicePage::applyActionChoice( InstallChoice choice )
     {
     case InstallChoice::Erase:
     {
-        auto gs = Calamares::JobQueue::instance()->globalStorage();
-        PartitionActions::Choices::AutoPartitionOptions options { gs->value( "defaultPartitionTableType" ).toString(),
-                                                                  m_config->eraseFsType(),
-                                                                  m_config->luksFileSystemType(),
-                                                                  m_encryptWidget->passphrase(),
-                                                                  gs->value( "efiSystemPartition" ).toString(),
-                                                                  Calamares::GiBtoBytes(
-                                                                      gs->value( "requiredStorageGiB" ).toDouble() ),
-                                                                  m_config->swapChoice() };
-
         if ( m_core->isDirty() )
         {
             ScanningDialog::run(
@@ -524,14 +430,12 @@ ChoicePage::applyActionChoice( InstallChoice choice )
                     } ),
                 [ = ]
                 {
-                    PartitionActions::doAutopartition( m_core, selectedDevice(), options );
                     Q_EMIT deviceChosen();
                 },
                 this );
         }
         else
         {
-            PartitionActions::doAutopartition( m_core, selectedDevice(), options );
             Q_EMIT deviceChosen();
         }
     }
@@ -657,28 +561,6 @@ ChoicePage::doAlongsideSetupSplitter( const QModelIndex& current, const QModelIn
 }
 
 void
-ChoicePage::onEncryptWidgetStateChanged()
-{
-    EncryptWidget::Encryption state = m_encryptWidget->state();
-    if ( m_config->installChoice() == InstallChoice::Erase )
-    {
-        if ( state == EncryptWidget::Encryption::Confirmed || state == EncryptWidget::Encryption::Disabled )
-        {
-            applyActionChoice( m_config->installChoice() );
-        }
-    }
-    else if ( m_config->installChoice() == InstallChoice::Replace )
-    {
-        if ( m_beforePartitionBarsView && m_beforePartitionBarsView->selectionModel()->currentIndex().isValid()
-             && ( state == EncryptWidget::Encryption::Confirmed || state == EncryptWidget::Encryption::Disabled ) )
-        {
-            doReplaceSelectedPartition( m_beforePartitionBarsView->selectionModel()->currentIndex() );
-        }
-    }
-    updateNextEnabled();
-}
-
-void
 ChoicePage::onHomeCheckBoxStateChanged()
 {
     if ( m_config->installChoice() == InstallChoice::Replace
@@ -692,10 +574,7 @@ void
 ChoicePage::onLeave()
 {
     Calamares::GlobalStorage* gs = Calamares::JobQueue::instance()->globalStorage();
-    const bool useLuksPassphrase = ( m_encryptWidget->state() == EncryptWidget::Encryption::Confirmed );
-    const QString storedLuksPassphrase
-        = useLuksPassphrase ? Calamares::String::obscure( m_encryptWidget->passphrase() ) : QString();
-    gs->insert( "luksPassphrase", storedLuksPassphrase );
+    gs->insert( "selectedDisk", selectedDevice() ? selectedDevice()->deviceNode() : QString() );
 
     if ( m_config->installChoice() == InstallChoice::Alongside )
     {
@@ -779,18 +658,10 @@ ChoicePage::doAlongsideApply()
         if ( candidate )
         {
             qint64 firstSector = candidate->firstSector();
-            qint64 oldLastSector = candidate->lastSector();
             qint64 newLastSector
                 = firstSector + m_afterPartitionSplitterWidget->splitPartitionSize() / dev->logicalSize();
 
             m_core->resizePartition( dev, candidate, firstSector, newLastSector );
-            m_core->layoutApply( dev,
-                                 newLastSector + 2,
-                                 oldLastSector,
-                                 m_config->luksFileSystemType(),
-                                 m_encryptWidget->passphrase(),
-                                 candidate->parent(),
-                                 candidate->roles() );
             m_core->dumpQueue();
 
             break;
@@ -845,7 +716,6 @@ ChoicePage::doReplaceSelectedPartition( const QModelIndex& current )
                     //      a separate /home partition at all because there's no existing
                     //      rootfs to read it from.
                     PartitionRole newRoles = PartitionRole( PartitionRole::Primary );
-                    PartitionNode* newParent = selectedDevice()->partitionTable();
 
                     if ( selectedPartition->parent() )
                     {
@@ -853,17 +723,8 @@ ChoicePage::doReplaceSelectedPartition( const QModelIndex& current )
                         if ( parent && parent->roles().has( PartitionRole::Extended ) )
                         {
                             newRoles = PartitionRole( PartitionRole::Logical );
-                            newParent = findPartitionByPath( { selectedDevice() }, parent->partitionPath() );
                         }
                     }
-
-                    m_core->layoutApply( selectedDevice(),
-                                         selectedPartition->firstSector(),
-                                         selectedPartition->lastSector(),
-                                         m_config->luksFileSystemType(),
-                                         m_encryptWidget->passphrase(),
-                                         newParent,
-                                         newRoles );
                 }
                 else
                 {
@@ -890,13 +751,6 @@ ChoicePage::doReplaceSelectedPartition( const QModelIndex& current )
 
                         Calamares::GlobalStorage* gs = Calamares::JobQueue::instance()->globalStorage();
 
-                        PartitionActions::doReplacePartition( m_core,
-                                                              selectedDevice(),
-                                                              selectedPartition,
-                                                              { gs->value( "defaultPartitionType" ).toString(),
-                                                                m_config->replaceModeFilesystem(),
-                                                                m_config->luksFileSystemType(),
-                                                                m_encryptWidget->passphrase() } );
                         Partition* homePartition = findPartitionByPath( { selectedDevice() }, *homePartitionPath );
 
                         if ( homePartition && doReuseHomePartition )
@@ -1051,19 +905,9 @@ ChoicePage::updateActionChoicePreview( InstallChoice choice )
     {
     case InstallChoice::Alongside:
     {
-        if ( m_enableEncryptionWidget )
-        {
-            m_encryptWidget->show();
-            if ( m_config->preCheckEncryption() && !m_preCheckActivated )
-            {
-                m_encryptWidget->setEncryptionCheckbox( true );
-                m_preCheckActivated = true;
-            }
-        }
         m_previewBeforeLabel->setText( tr( "Current:", "@label" ) );
         m_selectLabel->setText( tr( "<strong>Select a partition to shrink, "
                                     "then drag the bottom bar to resize</strong>" ) );
-        m_selectLabel->show();
 
         m_afterPartitionSplitterWidget = new PartitionSplitterWidget( m_previewAfterFrame );
         m_afterPartitionSplitterWidget->init( selectedDevice(), mode == PartitionBarsView::DrawNestedPartitions );
@@ -1094,9 +938,6 @@ ChoicePage::updateActionChoicePreview( InstallChoice choice )
                              .arg( Calamares::Branding::instance()->shortProductName() ) );
                  } );
 
-        m_previewAfterFrame->show();
-        m_previewAfterLabel->show();
-
         SelectionFilter filter = []( const QModelIndex& index )
         {
             return PartUtils::canBeResized(
@@ -1111,15 +952,6 @@ ChoicePage::updateActionChoicePreview( InstallChoice choice )
     case InstallChoice::Erase:
     case InstallChoice::Replace:
     {
-        if ( shouldShowEncryptWidget( choice ) )
-        {
-            m_encryptWidget->show();
-            if ( m_config->preCheckEncryption() && !m_preCheckActivated )
-            {
-                m_encryptWidget->setEncryptionCheckbox( true );
-                m_preCheckActivated = true;
-            }
-        }
         m_previewBeforeLabel->setText( tr( "Current:", "@label" ) );
         m_afterPartitionBarsView = new PartitionBarsView( m_previewAfterFrame );
         m_afterPartitionBarsView->setNestedPartitionsMode( mode );
@@ -1145,9 +977,6 @@ ChoicePage::updateActionChoicePreview( InstallChoice choice )
             layout->addWidget( createBootloaderPanel() );
         }
 
-        m_previewAfterFrame->show();
-        m_previewAfterLabel->show();
-
         if ( m_config->installChoice() == InstallChoice::Erase )
         {
             m_selectLabel->hide();
@@ -1162,9 +991,6 @@ ChoicePage::updateActionChoicePreview( InstallChoice choice )
             };
             m_beforePartitionBarsView->setSelectionFilter( filter );
             m_beforePartitionLabelsView->setSelectionFilter( filter );
-
-            m_selectLabel->show();
-            m_selectLabel->setText( tr( "<strong>Select a partition to install on</strong>", "@label" ) );
         }
 
         break;
@@ -1175,7 +1001,6 @@ ChoicePage::updateActionChoicePreview( InstallChoice choice )
         m_previewAfterFrame->hide();
         m_previewBeforeLabel->setText( tr( "Current:", "@label" ) );
         m_previewAfterLabel->hide();
-        m_encryptWidget->hide();
         break;
     }
 
@@ -1241,7 +1066,6 @@ ChoicePage::setupEfiSystemPartitionSelector()
     }
     else
     {
-        m_efiComboBox->show();
         m_efiLabel->setText( tr( "EFI system partition:", "@label" ) );
         for ( int i = 0; i < efiSystemPartitions.count(); ++i )
         {
@@ -1320,27 +1144,7 @@ ChoicePage::setupActions()
         m_deviceInfoWidget->setPartitionTableType( PartitionTable::unknownTableType );
     }
 
-    if ( m_config->allowManualPartitioning() )
-    {
-        m_somethingElseButton->show();
-    }
-    else
-    {
-        force_uncheck( m_grp, m_somethingElseButton );
-    }
-
-    bool atLeastOneCanBeResized = false;
-    bool atLeastOneCanBeReplaced = false;
-    bool atLeastOneIsMounted = false;  // Suppress 'erase' if so
-    bool isInactiveRAID = false;
     bool matchTableType = false;
-
-    if ( currentDevice->type() == Device::Type::SoftwareRAID_Device
-         && static_cast< SoftwareRAID* >( currentDevice )->status() == SoftwareRAID::Status::Inactive )
-    {
-        cDebug() << Logger::SubEntry << "part of an inactive RAID device";
-        isInactiveRAID = true;
-    }
 
     PartitionTable::TableType tableType = PartitionTable::unknownTableType;
     if ( currentDevice->partitionTable() )
@@ -1349,33 +1153,11 @@ ChoicePage::setupActions()
         matchTableType = m_config->acceptPartitionTableType( tableType );
     }
 
-    for ( auto it = PartitionIterator::begin( currentDevice ); it != PartitionIterator::end( currentDevice ); ++it )
-    {
-        if ( PartUtils::canBeResized( *it, o ) )
-        {
-            cDebug() << Logger::SubEntry << "contains resizable" << it;
-            atLeastOneCanBeResized = true;
-        }
-        if ( PartUtils::canBeReplaced( *it, o ) )
-        {
-            cDebug() << Logger::SubEntry << "contains replaceable" << it;
-            atLeastOneCanBeReplaced = true;
-        }
-        if ( ( *it )->isMounted() )
-        {
-            atLeastOneIsMounted = true;
-        }
-    }
-
     m_osproberEntriesCount = osproberEntriesForCurrentDevice.count();
     if ( m_osproberEntriesCount == 0 )
     {
         m_osproberOneEntryName.clear();
-        m_replaceButton->hide();
-        m_alongsideButton->hide();
         m_grp->setExclusive( false );
-        m_replaceButton->setChecked( false );
-        m_alongsideButton->setChecked( false );
         m_grp->setExclusive( true );
     }
     else if ( m_osproberEntriesCount == 1 )
@@ -1389,47 +1171,6 @@ ChoicePage::setupActions()
     }
     updateActionDescriptionsTr();
 
-#ifdef DEBUG_PARTITION_UNSAFE
-#ifdef DEBUG_PARTITION_BAIL_OUT
-    // If things can't be broken, allow all the buttons
-    atLeastOneCanBeReplaced = true;
-    atLeastOneCanBeResized = true;
-    atLeastOneIsMounted = false;
-    isInactiveRAID = false;
-#endif
-#endif
-
-    if ( atLeastOneCanBeReplaced )
-    {
-        m_replaceButton->show();
-    }
-    else
-    {
-        cDebug() << "No partitions available for replace-action.";
-        force_uncheck( m_grp, m_replaceButton );
-    }
-
-    if ( atLeastOneCanBeResized )
-    {
-        m_alongsideButton->show();
-    }
-    else
-    {
-        cDebug() << "No partitions available for resize-action.";
-        force_uncheck( m_grp, m_alongsideButton );
-    }
-
-    if ( !atLeastOneIsMounted && !isInactiveRAID )
-    {
-        m_eraseButton->show();  // None mounted
-    }
-    else
-    {
-        cDebug() << "No partitions ("
-                 << "any-mounted?" << atLeastOneIsMounted << "is-raid?" << isInactiveRAID << ") for erase-action.";
-        force_uncheck( m_grp, m_eraseButton );
-    }
-
     bool isEfi = PartUtils::isEfiSystem();
     bool efiSystemPartitionFound = !m_core->efiSystemPartitions().isEmpty();
 
@@ -1437,8 +1178,6 @@ ChoicePage::setupActions()
     {
         cWarning() << "System is EFI but there's no EFI system partition, "
                       "DISABLING alongside and replace features.";
-        m_alongsideButton->hide();
-        m_replaceButton->hide();
     }
 
     if ( tableType != PartitionTable::unknownTableType && !matchTableType )
@@ -1448,37 +1187,6 @@ ChoicePage::setupActions()
                                      "needed <strong>%2</strong>.<br/>" )
                                      .arg( PartitionTable::tableTypeToName( tableType ) )
                                      .arg( describePartitionTypes( m_config->partitionTableTypes() ) ) );
-        m_messageLabel->show();
-
-        cWarning() << "Partition table" << PartitionTable::tableTypeToName( tableType )
-                   << "does not match the requirement " << m_config->partitionTableTypes().join( ',' )
-                   << ", ENABLING erase feature and DISABLING alongside, replace and manual features.";
-        m_eraseButton->show();
-        m_alongsideButton->hide();
-        m_replaceButton->hide();
-        m_somethingElseButton->hide();
-        cDebug() << "Replace button suppressed because partition table type mismatch.";
-        force_uncheck( m_grp, m_replaceButton );
-    }
-
-    if ( m_somethingElseButton->isHidden() && m_alongsideButton->isHidden() && m_replaceButton->isHidden()
-         && m_eraseButton->isHidden() )
-    {
-        if ( atLeastOneIsMounted )
-        {
-            m_messageLabel->setText(
-                tr( "This storage device has one of its partitions <strong>mounted</strong>.", "@info" ) );
-        }
-        else
-        {
-            m_messageLabel->setText(
-                tr( "This storage device is a part of an <strong>inactive RAID</strong> device.", "@info" ) );
-        }
-
-        m_messageLabel->show();
-        cWarning() << "No buttons available"
-                   << "replaced?" << atLeastOneCanBeReplaced << "resized?" << atLeastOneCanBeResized
-                   << "erased? (not-mounted and not-raid)" << !atLeastOneIsMounted << "and" << !isInactiveRAID;
     }
 }
 
@@ -1534,23 +1242,6 @@ ChoicePage::calculateNextEnabled() const
         {
             cDebug() << "No EFI partition for alongside or replace";
             return false;
-        }
-    }
-
-    // You can have an invisible encryption checkbox, which is
-    // still checked -- then do the encryption.
-    if ( m_config->installChoice() != InstallChoice::Manual
-         && ( m_encryptWidget->isVisible() || m_encryptWidget->isEncryptionCheckboxChecked() ) )
-    {
-        switch ( m_encryptWidget->state() )
-        {
-        case EncryptWidget::Encryption::Unconfirmed:
-            cDebug() << "No passphrase provided or passphrase mismatch.";
-            return false;
-        case EncryptWidget::Encryption::Disabled:
-        case EncryptWidget::Encryption::Confirmed:
-            // Checkbox not checked, **or** passphrases match
-            break;
         }
     }
 
@@ -1613,16 +1304,6 @@ ChoicePage::updateSwapChoicesTr()
         default:
             cWarning() << "Box item" << index << m_eraseSwapChoiceComboBox->itemText( index ) << "has role" << value;
         }
-    }
-}
-
-void
-ChoicePage::updateChoiceButtonsTr()
-{
-    if ( m_somethingElseButton )
-    {
-        m_somethingElseButton->setText( tr( "<strong>Manual partitioning</strong><br/>"
-                                            "You can create or resize partitions yourself." ) );
     }
 }
 
@@ -1708,24 +1389,6 @@ ChoicePage::createBootloaderPanel()
     return panelWidget;
 }
 
-bool
-ChoicePage::shouldShowEncryptWidget( Config::InstallChoice choice ) const
-{
-    bool suitableFS = true;
-    if ( !m_config->allowZfsEncryption()
-         && ( ( m_eraseFsTypesChoiceComboBox && m_eraseFsTypesChoiceComboBox->isVisible()
-                && m_eraseFsTypesChoiceComboBox->currentText() == "zfs" )
-              || ( m_replaceFsTypesChoiceComboBox && m_replaceFsTypesChoiceComboBox->isVisible()
-                   && m_replaceFsTypesChoiceComboBox->currentText() == "zfs" ) ) )
-    {
-        suitableFS = false;
-    }
-
-    const bool suitableChoice
-        = choice == InstallChoice::Erase || choice == InstallChoice::Alongside || choice == InstallChoice::Replace;
-    return suitableChoice && m_enableEncryptionWidget && suitableFS;
-}
-
 void
 ChoicePage::updateActionDescriptionsTr()
 {
@@ -1737,17 +1400,6 @@ ChoicePage::updateActionDescriptionsTr()
                                      "You will be able to review and confirm your choices "
                                      "before any change is made to the storage device." ) );
 
-        m_eraseButton->setText( tr( "<strong>Erase disk</strong><br/>"
-                                    "This will <font color=\"red\">delete</font> all data "
-                                    "currently present on the selected storage device." ) );
-
-        m_alongsideButton->setText( tr( "<strong>Install alongside</strong><br/>"
-                                        "The installer will shrink a partition to make room for %1." )
-                                        .arg( Calamares::Branding::instance()->shortVersionedName() ) );
-
-        m_replaceButton->setText( tr( "<strong>Replace a partition</strong><br/>"
-                                      "Replaces a partition with %1." )
-                                      .arg( Calamares::Branding::instance()->shortVersionedName() ) );
     }
     if ( m_osproberEntriesCount == 1 )
     {
@@ -1759,18 +1411,6 @@ ChoicePage::updateActionDescriptionsTr()
                                          "You will be able to review and confirm your choices "
                                          "before any change is made to the storage device." )
                                          .arg( m_osproberOneEntryName ) );
-
-            m_alongsideButton->setText( tr( "<strong>Install alongside</strong><br/>"
-                                            "The installer will shrink a partition to make room for %1." )
-                                            .arg( Calamares::Branding::instance()->shortVersionedName() ) );
-
-            m_eraseButton->setText( tr( "<strong>Erase disk</strong><br/>"
-                                        "This will <font color=\"red\">delete</font> all data "
-                                        "currently present on the selected storage device." ) );
-
-            m_replaceButton->setText( tr( "<strong>Replace a partition</strong><br/>"
-                                          "Replaces a partition with %1." )
-                                          .arg( Calamares::Branding::instance()->shortVersionedName() ) );
         }
         else
         {
@@ -1779,18 +1419,6 @@ ChoicePage::updateActionDescriptionsTr()
                                          "What would you like to do?<br/>"
                                          "You will be able to review and confirm your choices "
                                          "before any change is made to the storage device." ) );
-
-            m_alongsideButton->setText( tr( "<strong>Install alongside</strong><br/>"
-                                            "The installer will shrink a partition to make room for %1." )
-                                            .arg( Calamares::Branding::instance()->shortVersionedName() ) );
-
-            m_eraseButton->setText( tr( "<strong>Erase disk</strong><br/>"
-                                        "This will <font color=\"red\">delete</font> all data "
-                                        "currently present on the selected storage device." ) );
-
-            m_replaceButton->setText( tr( "<strong>Replace a partition</strong><br/>"
-                                          "Replaces a partition with %1." )
-                                          .arg( Calamares::Branding::instance()->shortVersionedName() ) );
         }
     }
     if ( m_osproberEntriesCount >= 2 )
@@ -1801,18 +1429,6 @@ ChoicePage::updateActionDescriptionsTr()
                                      "What would you like to do?<br/>"
                                      "You will be able to review and confirm your choices "
                                      "before any change is made to the storage device." ) );
-
-        m_alongsideButton->setText( tr( "<strong>Install alongside</strong><br/>"
-                                        "The installer will shrink a partition to make room for %1." )
-                                        .arg( Calamares::Branding::instance()->shortVersionedName() ) );
-
-        m_eraseButton->setText( tr( "<strong>Erase disk</strong><br/>"
-                                    "This will <font color=\"red\">delete</font> all data "
-                                    "currently present on the selected storage device." ) );
-
-        m_replaceButton->setText( tr( "<strong>Replace a partition</strong><br/>"
-                                      "Replaces a partition with %1." )
-                                      .arg( Calamares::Branding::instance()->shortVersionedName() ) );
     }
     if ( m_osproberEntriesCount < 0 )
     {

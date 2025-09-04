@@ -70,11 +70,8 @@ if(KPMcore_FOUND)
             core/PartUtils.cpp
             gui/BootInfoWidget.cpp
             gui/ChoicePage.cpp
-            gui/CreatePartitionDialog.cpp
             gui/CreateVolumeGroupDialog.cpp
             gui/DeviceInfoWidget.cpp
-            gui/EditExistingPartitionDialog.cpp
-            gui/EncryptWidget.cpp
             gui/ListPhysicalVolumeWidgetItem.cpp
             gui/PartitionPage.cpp
             gui/PartitionBarsView.cpp
@@ -103,10 +100,7 @@ if(KPMcore_FOUND)
             jobs/SetPartitionFlagsJob.cpp
         UI
             gui/ChoicePage.ui
-            gui/CreatePartitionDialog.ui
             gui/CreatePartitionTableDialog.ui
-            gui/EditExistingPartitionDialog.ui
-            gui/EncryptWidget.ui
             gui/PartitionPage.ui
             gui/VolumeGroupBaseDialog.ui
         LINK_PRIVATE_LIBRARIES

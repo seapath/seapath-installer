@@ -97,7 +97,6 @@ private slots:
     void onPartitionToReplaceSelected( const QModelIndex& current, const QModelIndex& previous );
     void doReplaceSelectedPartition( const QModelIndex& current );
     void doAlongsideSetupSplitter( const QModelIndex& current, const QModelIndex& previous );
-    void onEncryptWidgetStateChanged();
     void onHomeCheckBoxStateChanged();
 
     /// @brief Calls applyActionChoice() as needed.
@@ -121,13 +120,11 @@ private:
     Device* selectedDevice();
 
     /* Change the UI depending on the device selected. */
-    void hideButtons();  // Hide everything when no device
     void applyDeviceChoice();  // Start scanning new device
     void continueApplyDeviceChoice();  // .. called after scan
 
     void updateDeviceStatePreview();
     void updateActionChoicePreview( Config::InstallChoice choice );
-    bool shouldShowEncryptWidget( Config::InstallChoice choice ) const;
     void setupActions();
     OsproberEntryList getOsproberEntriesForDevice( Device* device ) const;
     void doAlongsideApply();
@@ -135,7 +132,6 @@ private:
 
     // Translations support
     void updateSwapChoicesTr();
-    void updateChoiceButtonsTr();
     void updateActionDescriptionsTr();
 
     Config* m_config;
@@ -148,10 +144,6 @@ private:
     QComboBox* m_drivesCombo;
 
     QButtonGroup* m_grp;
-    Calamares::Widgets::PrettyRadioButton* m_alongsideButton;
-    Calamares::Widgets::PrettyRadioButton* m_eraseButton;
-    Calamares::Widgets::PrettyRadioButton* m_replaceButton;
-    Calamares::Widgets::PrettyRadioButton* m_somethingElseButton;
     QComboBox* m_eraseSwapChoiceComboBox = nullptr;  // UI, see also Config's swap choice
     QComboBox* m_eraseFsTypesChoiceComboBox = nullptr;  // UI, see also Config's erase-mode FS
     QComboBox* m_replaceFsTypesChoiceComboBox = nullptr;  // UI, see also Config's erase-mode FS
@@ -172,7 +164,6 @@ private:
     int m_osproberEntriesCount = -1;
     QString m_osproberOneEntryName;
 
-    bool m_enableEncryptionWidget = false;
     bool m_preCheckActivated = false;
 
     QMutex m_coreMutex;
