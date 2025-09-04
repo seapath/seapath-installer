@@ -44,16 +44,7 @@ def pretty_status_message():
 
 
 def get_device(partition):
-    device = ""
-    try:
-        device = subprocess.check_output(
-            ["lsblk", "-no", "PKNAME", partition], text=True
-        )
-    except subprocess.CalledProcessError as e:
-        libcalamares.utils.error(f"Failed to get device for partition {partition}: {e}")
-        raise
-    return f"/dev/{device.strip()}"
-
+    return libcalamares.globalstorage.value("selectedDisk")
 
 def run():
     """Raw image copy module"""
