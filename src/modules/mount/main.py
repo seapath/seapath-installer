@@ -15,29 +15,34 @@
 
 import tempfile
 import subprocess
-import os
-import re
 
 import libcalamares
 
 import gettext
 
-_ = gettext.translation("calamares-python",
-                        localedir=libcalamares.utils.gettext_path(),
-                        languages=libcalamares.utils.gettext_languages(),
-                        fallback=True).gettext
+_ = gettext.translation(
+    "calamares-python",
+    localedir=libcalamares.utils.gettext_path(),
+    languages=libcalamares.utils.gettext_languages(),
+    fallback=True,
+).gettext
+
 
 def pretty_name():
     return _("Mounting partitions.")
+
 
 def copy_files(source, destination):
     try:
         subprocess.run(["cp", "-r", source, destination], check=True)
     except subprocess.CalledProcessError:
-        libcalamares.utils.warning(f"Failed to copy files from {source} to {destination}")
+        libcalamares.utils.warning(
+            f"Failed to copy files from {source} to {destination}"
+        )
+
 
 def append_to_file(source, destination):
-    with open(source, 'r') as src, open(destination, 'a') as dest:
+    with open(source, "r") as src, open(destination, "a") as dest:
         dest.write(src.read())
 
 
@@ -47,6 +52,36 @@ def mount_partitions(partition, root_mount_point):
     except subprocess.CalledProcessError:
         libcalamares.utils.warning(f"Failed to mount partition: {partition}")
 
+
+def get_seapath_flavor(image_name):
+    if "debian" in image_name.lower():
+        libcalamares.globalstorage.insert("seapath_flavor", "debian")
+        return "debian"
+    else:
+        libcalamares.globalstorage.insert("seapath_flavor", "yocto")
+    return "yocto"
+
+
+def get_rootfs_partition(device_name):
+    try:
+        result = subprocess.run(
+            ["lsblk", "--list", "--noheadings", "--output", "NAME", device_name],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        partitions = ["/dev/" + word for word in result.stdout.strip().split("\n")]
+    except subprocess.CalledProcessError:
+        libcalamares.utils.warning(f"Failed to list partitions of {device_name}.")
+
+    selected_image_name = libcalamares.globalstorage.value("imageselection.selected")[0]
+    if get_seapath_flavor(selected_image_name) == "debian":
+        rootfs_partition = partitions[2]
+    else:
+        rootfs_partition = partitions[3]
+    return rootfs_partition
+
+
 def run():
     target_disk = libcalamares.globalstorage.value("selectedDisk")
     sshkey = libcalamares.globalstorage.value("sshkeyselection.selectedKeys")
@@ -54,7 +89,9 @@ def run():
     libcalamares.utils.debug("target disk is {!s}".format(target_disk))
     root_mount_point = tempfile.mkdtemp(prefix="calamares-root-")
 
-    mount_partitions(f"{target_disk}3", root_mount_point)
+    rootfs_partition = get_rootfs_partition(target_disk)
+
+    mount_partitions(rootfs_partition, root_mount_point)
 
     for key in sshkey:
         append_to_file(key, root_mount_point + "/home/admin/.ssh/authorized_keys")
