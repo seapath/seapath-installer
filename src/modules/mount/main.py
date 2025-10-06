@@ -13,6 +13,7 @@
 #   Calamares is Free Software: see the License-Identifier above.
 #
 
+import os
 import tempfile
 import subprocess
 
@@ -26,6 +27,8 @@ _ = gettext.translation(
     languages=libcalamares.utils.gettext_languages(),
     fallback=True,
 ).gettext
+
+SSH_KEYSDIR_AT_HOME = "admin/.ssh"
 
 
 def pretty_name():
@@ -42,18 +45,69 @@ def copy_files(source, destination):
 
 
 def append_to_file(source, destination):
-    with open(source, "r") as src, open(destination, "a") as dest:
-        dest.write(src.read())
+    """
+    Append the contents of the source file to the destination file. If the
+    destination file does not exist create it.
+    """
+    if not os.path.exists(source):
+        raise FileNotFoundError(f"The source file '{source}' does not exist.")
 
+    if os.path.exists(destination):
+        write_mode = "a"
+    else:
+        write_mode = "w"
 
-def mount_partitions(partition, root_mount_point):
     try:
-        subprocess.run(["mount", partition, root_mount_point], check=True)
+        with open(source, "r") as src, open(destination, write_mode) as dest:
+            dest.write(src.read())
+    except IOError as e:
+        libcalamares.utils.warning(f"An I/O error occured: {e}")
+
+
+def mount_partition(partition, mount_point):
+    try:
+        subprocess.run(["mount", partition, mount_point], check=True)
     except subprocess.CalledProcessError:
         libcalamares.utils.warning(f"Failed to mount partition: {partition}")
 
 
+def mount_overlay(lowerdir, upperdir, workdir, mount_point, options=None):
+    """
+    Creates upperdir, workdir and the overlayfs using those.
+    """
+    try:
+        os.makedirs(upperdir, exist_ok=True)
+        os.makedirs(workdir, exist_ok=True)
+    except OSError as error:
+        libcalamares.utils.warning(
+            f"Failed to create directories for overlay with error {error} "
+        )
+
+    mount_options = f"lowerdir={lowerdir},upperdir={upperdir},workdir={workdir}"
+    if options:
+        mount_options = f"{options},{mount_options}"
+
+    mount_cmd = [
+        "mount",
+        "-t",
+        "overlay",
+        "overlay",
+        "-o",
+        mount_options,
+        mount_point,
+    ]
+    try:
+        subprocess.run(mount_cmd, check=True)
+    except subprocess.CalledProcessError:
+        libcalamares.utils.warning(
+            f"Failed to mount overlayfs using the command for {lowerdir}"
+        )
+
+
 def get_seapath_flavor(image_name):
+    """
+    Gets seapath flavor from the image name.
+    """
     if "debian" in image_name.lower():
         libcalamares.globalstorage.insert("seapath_flavor", "debian")
         return "debian"
@@ -62,7 +116,22 @@ def get_seapath_flavor(image_name):
     return "yocto"
 
 
-def get_rootfs_partition(device_name):
+def get_partitions(device_name):
+    """
+    This processes the output of lsblk to get rootfs and persistent partitions.
+    The output of lsblk will be like:
+    nvme0n1
+    nvme0n1p1
+    nvme0n1p2
+    nvme0n1p3
+    nvme0n1p4
+    nvme0n1p5
+    nvme0n1p6
+    If the flavor is debian, roofs is the second one. If the flavor is seapath
+    rootfs is third and the persistentfs is sixth.
+
+    Returns rootfs and persistent partitions name as string.
+    """
     try:
         result = subprocess.run(
             ["lsblk", "--list", "--noheadings", "--output", "NAME", device_name],
@@ -75,11 +144,13 @@ def get_rootfs_partition(device_name):
         libcalamares.utils.warning(f"Failed to list partitions of {device_name}.")
 
     selected_image_name = libcalamares.globalstorage.value("imageselection.selected")[0]
+    persistent_partition = ""
     if get_seapath_flavor(selected_image_name) == "debian":
         rootfs_partition = partitions[2]
     else:
         rootfs_partition = partitions[3]
-    return rootfs_partition
+        persistent_partition = partitions[6]
+    return rootfs_partition, persistent_partition
 
 
 def run():
@@ -87,11 +158,45 @@ def run():
     sshkey = libcalamares.globalstorage.value("sshkeyselection.selectedKeys")
     libcalamares.utils.debug("sshkeyselection: selected keys: {!s}".format(sshkey))
     libcalamares.utils.debug("target disk is {!s}".format(target_disk))
-    root_mount_point = tempfile.mkdtemp(prefix="calamares-root-")
 
-    rootfs_partition = get_rootfs_partition(target_disk)
+    home_mount_point = tempfile.mkdtemp(prefix="calamares-home-")
+    etc_mount_point = tempfile.mkdtemp(prefix="calamares-etc-")
+    libcalamares.globalstorage.insert("homeMountPoint", home_mount_point)
+    libcalamares.globalstorage.insert("etcMountPoint", etc_mount_point)
 
-    mount_partitions(rootfs_partition, root_mount_point)
+    rootfs0_mount_point = "/mnt/rootfs0"
+    persistent_mount_point = "/mnt/persistent"
+    os.makedirs(rootfs0_mount_point, exist_ok=True)
+    os.makedirs(persistent_mount_point, exist_ok=True)
+
+    rootfs_partition, persistent_partition = get_partitions(target_disk)
+
+    seapath_flavor = get_seapath_flavor(
+        libcalamares.globalstorage.value("imageselection.selected")[0]
+    )
+
+    mount_partition(rootfs_partition, rootfs0_mount_point)
+
+    # Mount overlayfs
+    if seapath_flavor == "yocto":
+        mount_partition(persistent_partition, persistent_mount_point)
+        mount_overlay(
+            f"{rootfs0_mount_point}/home",
+            f"{persistent_mount_point}/home",
+            f"{persistent_mount_point}/.home-work",
+            home_mount_point,
+        )
+        mount_overlay(
+            f"{rootfs0_mount_point}/etc",
+            f"{persistent_mount_point}/etc",
+            f"{persistent_mount_point}/.etc-work",
+            etc_mount_point,
+            options="rw,relatime",
+        )
+        sshdir = os.path.join(home_mount_point, SSH_KEYSDIR_AT_HOME)
+        os.makedirs(sshdir, exist_ok=True)
+    else:
+        sshdir = os.path.join(rootfs0_mount_point, "home", SSH_KEYSDIR_AT_HOME)
 
     for key in sshkey:
-        append_to_file(key, root_mount_point + "/home/admin/.ssh/authorized_keys")
+        append_to_file(key, os.path.join(sshdir, "authorized_keys"))
