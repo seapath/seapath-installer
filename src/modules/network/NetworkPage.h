@@ -36,6 +36,7 @@ public:
     void onActivate();
 
 protected slots:
+    void onUseDhcpChanged( const int checked );
     void onNetworkInterfaceTextEdited( const QString& );
     void reportIpAddressStatus( const QString& );
     void reportMaskStatus( const QString& );

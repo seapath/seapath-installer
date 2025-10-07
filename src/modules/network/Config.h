@@ -34,6 +34,8 @@ class PLUGINDLLEXPORT Config : public Calamares::ModuleSystem::Config
     Q_PROPERTY( QString gateway READ gateway WRITE setGateway NOTIFY gatewayChanged )
     Q_PROPERTY( QString gatewayStatus READ gatewayStatus NOTIFY gatewayStatusChanged )
 
+    Q_PROPERTY( bool useDhcpForStaticIp READ useDhcpForStaticIp WRITE setUseDhcpForStaticIp NOTIFY useDhcpForStaticIpChanged )
+
     Q_PROPERTY( bool ready READ isReady NOTIFY readyChanged STORED false )
 
 public:
@@ -70,6 +72,11 @@ public:
     /// Status message about gateway
     QString gatewayStatus() const;
 
+    /// Use the DHCP for setting static IP address?
+    bool useDhcpForStaticIp() const { return m_useDhcpForStaticIp; }
+    /// Should use dhcp?
+    bool getUseDhcp() const;
+
     bool isReady() const;
 
 public Q_SLOTS:
@@ -81,6 +88,8 @@ public Q_SLOTS:
     void setMask( const QString& mask );
     /// Sets the gateway address
     void setGateway( const QString& gateway );
+    /// Sets to true to use dhcp
+    void setUseDhcpForStaticIp( bool useDhcp );
 
 signals:
     void networkInterfaceChanged( const QString& );
@@ -90,6 +99,7 @@ signals:
     void maskStatusChanged( const QString& );
     void gatewayChanged( const QString& );
     void gatewayStatusChanged( const QString& );
+    void useDhcpForStaticIpChanged( bool );
     void readyChanged( bool ) const;
 
 private:
@@ -99,6 +109,8 @@ private:
     QString m_ipAddress;
     QString m_mask;
     QString m_gateway;
+
+    bool m_useDhcpForStaticIp = false;
 
     bool m_isReady = false;  ///< Used to reduce readyChanged signals
 };

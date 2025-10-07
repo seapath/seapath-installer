@@ -39,6 +39,7 @@ Config::Config( QObject* parent )
     emit readyChanged( m_isReady );  // false
 
     // Gang together all the changes of status to one readyChanged() signal
+    connect( this, &Config::useDhcpForStaticIpChanged, this, &Config::checkReady );
     connect( this, &Config::networkInterfaceChanged, this, &Config::checkReady );
     connect( this, &Config::ipAddressStatusChanged, this, &Config::checkReady );
     connect( this, &Config::maskStatusChanged, this, &Config::checkReady );
@@ -186,12 +187,25 @@ Config::gatewayStatus() const
     return QString();
 }
 
+void
+Config::setUseDhcpForStaticIp( bool useDhcp )
+{
+    m_useDhcpForStaticIp = useDhcp;
+    Calamares::GlobalStorage* gs = Calamares::JobQueue::instance()->globalStorage();
+    gs->insert( "useDhcp", useDhcp );
+}
+
 bool
 Config::isReady() const
 {
+    bool readyUseDhcp = useDhcpForStaticIp();
     bool readyNetworkInterface = !networkInterface().isEmpty();  // Needs some text
     bool readyIpAddress = ipAddressStatus().isEmpty();
     bool readyGateway = gatewayStatus().isEmpty();
+    if ( readyUseDhcp )
+    {
+        return readyNetworkInterface;
+    }
     return readyNetworkInterface && readyIpAddress && readyGateway;
 }
 
@@ -262,8 +276,6 @@ Config::createJobs() const
     {
         return jobs;
     }
-
-    Calamares::Job* j;
 
     return jobs;
 }

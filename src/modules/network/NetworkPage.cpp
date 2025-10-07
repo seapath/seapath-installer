@@ -84,6 +84,10 @@ NetworkPage::NetworkPage( Config* config, QWidget* parent )
     ui->setupUi( this );
 
     // Connect signals and slots
+    ui->checkBoxUseDhcp->setChecked( m_config->useDhcpForStaticIp() );
+    connect( config, &Config::useDhcpForStaticIpChanged, ui->checkBoxUseDhcp, &QCheckBox::setChecked );
+    connect( ui->checkBoxUseDhcp, Calamares::checkBoxStateChangedSignal, this, &NetworkPage::onUseDhcpChanged  );
+
     ui->textBoxNetworkInterface->setText( config->networkInterface() );
     connect( ui->textBoxNetworkInterface, &QLineEdit::textEdited, config, &Config::setNetworkInterface );
     connect( config, &Config::networkInterfaceChanged, this, &NetworkPage::onNetworkInterfaceTextEdited );
@@ -102,6 +106,7 @@ NetworkPage::NetworkPage( Config* config, QWidget* parent )
 
     CALAMARES_RETRANSLATE_SLOT( &NetworkPage::retranslate );
 
+    onUseDhcpChanged( m_config->useDhcpForStaticIp() );
     onNetworkInterfaceTextEdited( m_config->networkInterface() );
     reportIpAddressStatus( m_config->ipAddressStatus() );
     reportGatewayStatus( m_config->gatewayStatus() );
@@ -149,4 +154,17 @@ void
 NetworkPage::reportGatewayStatus( const QString& status )
 {
     labelStatus( ui->labelGateway, ui->labelGatewayError, m_config->gateway(), status );
+}
+
+void
+NetworkPage::onUseDhcpChanged( const int checked )
+{
+    // Pass the change to config
+    m_config->setUseDhcpForStaticIp( checked != Qt::Unchecked );
+    // When the useDhcp checkbox is checked, Ip address, Mask and
+    // Gateway text boxes should not editable.
+    const bool editable = !m_config->useDhcpForStaticIp();
+    ui->textBoxIpAddress->setEnabled( editable );
+    ui->textBoxMask->setEnabled( editable );
+    ui->textBoxGateway->setEnabled( editable );
 }
