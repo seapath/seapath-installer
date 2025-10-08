@@ -16,6 +16,7 @@
 #define NETWORKPAGE_H
 
 #include <QWidget>
+#include <QString>
 
 class Config;
 
@@ -37,13 +38,16 @@ public:
 
 protected slots:
     void onUseDhcpChanged( const int checked );
-    void onNetworkInterfaceTextEdited( const QString& );
+    void onNetworkInterfaceSelectionChanged( const QString& );
     void reportIpAddressStatus( const QString& );
     void reportMaskStatus( const QString& );
     void reportGatewayStatus( const QString& );
 
 private:
     void retranslate();
+    void initInterfaces();
+
+    int m_interfaceIndex = 0;
 
     Ui::NetworkPage* ui;
     Config* m_config;

@@ -17,6 +17,7 @@
 
 #include "Config.h"
 #include "ui_NetworkPage.h"
+#include "NetworkInterfaceList.h"
 
 #include "GlobalStorage.h"
 #include "JobQueue.h"
@@ -31,6 +32,8 @@
 #include <QFile>
 #include <QLabel>
 #include <QLineEdit>
+#include <QStringList>
+#include <QComboBox>
 
 /** @brief Add an error message and pixmap to a label. */
 static inline void
@@ -88,10 +91,6 @@ NetworkPage::NetworkPage( Config* config, QWidget* parent )
     connect( config, &Config::useDhcpForStaticIpChanged, ui->checkBoxUseDhcp, &QCheckBox::setChecked );
     connect( ui->checkBoxUseDhcp, Calamares::checkBoxStateChangedSignal, this, &NetworkPage::onUseDhcpChanged  );
 
-    ui->textBoxNetworkInterface->setText( config->networkInterface() );
-    connect( ui->textBoxNetworkInterface, &QLineEdit::textEdited, config, &Config::setNetworkInterface );
-    connect( config, &Config::networkInterfaceChanged, this, &NetworkPage::onNetworkInterfaceTextEdited );
-
     ui->textBoxIpAddress->setText( config->ipAddress() );
     connect( ui->textBoxIpAddress, &QLineEdit::textEdited, config, &Config::setIpAddress );
     connect( config, &Config::ipAddressStatusChanged, this, &NetworkPage::reportIpAddressStatus );
@@ -104,13 +103,14 @@ NetworkPage::NetworkPage( Config* config, QWidget* parent )
     connect( ui->textBoxGateway, &QLineEdit::textEdited, config, &Config::setGateway );
     connect( config, &Config::gatewayStatusChanged, this, &NetworkPage::reportGatewayStatus );
 
+    initInterfaces();
+
     CALAMARES_RETRANSLATE_SLOT( &NetworkPage::retranslate );
 
     onUseDhcpChanged( m_config->useDhcpForStaticIp() );
-    onNetworkInterfaceTextEdited( m_config->networkInterface() );
+    onNetworkInterfaceSelectionChanged( m_config->networkInterface() );
     reportIpAddressStatus( m_config->ipAddressStatus() );
     reportGatewayStatus( m_config->gatewayStatus() );
-    ui->textBoxNetworkInterface->setEnabled( m_config->isEditable( "networkInterface" ) );
 
     retranslate();
 }
@@ -127,15 +127,31 @@ NetworkPage::retranslate()
 }
 
 void
-NetworkPage::onActivate()
+NetworkPage::initInterfaces()
 {
-    ui->textBoxNetworkInterface->setFocus();
+    ui->comboBoxNetworkInterface->clear();
+    ui->comboBoxNetworkInterface->setInsertPolicy( QComboBox::InsertAtBottom  );
+
+    NetworkUtils::NetworkInterfaceList interfaceList;
+    QStringList interfaces = interfaceList.getPhysicalNetworkInterfaces();
+    ui->comboBoxNetworkInterface->addItems(interfaces);
+
+    ui->comboBoxNetworkInterface->setCurrentIndex( m_interfaceIndex );
+    m_config->setNetworkInterface( ui->comboBoxNetworkInterface->currentText() );
+    connect( ui->comboBoxNetworkInterface, &QComboBox::currentTextChanged, m_config, &Config::setNetworkInterface );
+    connect( m_config, &Config::networkInterfaceChanged, this, &NetworkPage::onNetworkInterfaceSelectionChanged );
 }
 
 void
-NetworkPage::onNetworkInterfaceTextEdited( const QString& networkInterface )
+NetworkPage::onActivate()
 {
-    labelStatus( ui->labelNetworkInterface, ui->labelNetworkInterfaceError, networkInterface, QString() );
+    ui->comboBoxNetworkInterface->setFocus();
+}
+
+void
+NetworkPage::onNetworkInterfaceSelectionChanged( const QString& networkInterface )
+{
+    cDebug() << networkInterface << "network interface selection changed";
 }
 
 void

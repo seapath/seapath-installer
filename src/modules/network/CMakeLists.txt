@@ -35,6 +35,7 @@ calamares_add_plugin(network
     SOURCES
         NetworkViewStep.cpp
         NetworkPage.cpp
+        NetworkInterfaceList.cpp
     UI
         NetworkPage.ui
     LINK_PRIVATE_LIBRARIES

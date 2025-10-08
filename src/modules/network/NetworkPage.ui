@@ -113,17 +113,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
    <item>
     <layout class="QHBoxLayout" name="networkInterfaceLayout">
      <item>
-      <widget class="QLineEdit" name="textBoxNetworkInterface">
-       <property name="minimumSize">
-        <size>
-         <width>200</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="placeholderText">
-        <string>enp3s0</string>
-       </property>
-      </widget>
+      <widget class="QComboBox" name="comboBoxNetworkInterface"/>
      </item>
      <item>
       <widget class="QLabel" name="labelNetworkInterface">
@@ -149,22 +139,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
         <string notr="true"/>
        </property>
        <property name="scaledContents">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="labelNetworkInterfaceError">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-         <horstretch>1</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="wordWrap">
         <bool>true</bool>
        </property>
       </widget>
