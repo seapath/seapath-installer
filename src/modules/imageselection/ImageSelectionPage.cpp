@@ -113,9 +113,9 @@ ImageSelectionPage::scanAvailableImages()
 {
     QDir dir( "/seapath/images" );
 
-    QStringList json_files = dir.entryList( QStringList() << "*.json", QDir::Files );
-    cDebug() << "imageselection: scanning" << dir.path() << "found" << json_files.size() << "json file(s)";
-    for ( const QString& fn : json_files )
+    QStringList image_files = dir.entryList(QStringList() << "*.json" << "*.wic.gz" << "*.raw.gz" << "*.iso", QDir::Files);
+    cDebug() << "imageselection: scanning" << dir.path() << "found" << image_files.size() << "image file(s)";
+    for ( const QString& fn : image_files )
     {
         QString gz_image = fn;
         gz_image.replace(QRegularExpression("\\.json$"), ".gz");
@@ -128,26 +128,51 @@ ImageSelectionPage::scanAvailableImages()
         }
 
         cDebug() << "imageselection: found" << fn;
-        QJsonParseError pe;
-        QJsonDocument doc = QJsonDocument::fromJson( f.readAll(), &pe );
+
+        if ( !fn.endsWith( ".json" ) )
+        {
+            // Not a JSON file, just add it with minimal info
+            QString name = fn;
+            name.replace(QRegularExpression("\\.(wic\\.gz|raw\\.gz|iso)$"), "");
+            cDebug() << "imageselection: found image" << name << "(non-JSON file)";
+            m_availableImages << name;
+
+            auto* item = new QTreeWidgetItem( ui->treeWidget );
+            item->setText( 0, name );
+            item->setText( 1, "-" );
+            item->setText( 2, "(no description available)" );
+            item->setFlags( item->flags() | Qt::ItemIsUserCheckable );
+            item->setCheckState( 0, Qt::Unchecked );
+
+            item->setData( 0, Qt::UserRole, dir.absoluteFilePath( gz_image ) );          // original file path
+            continue;
+        }
+
+        else {
+            QJsonParseError pe;
+            QJsonDocument doc = QJsonDocument::fromJson( f.readAll(), &pe );
+
+            QJsonObject o = doc.object();
+            QString name = o.value( "name" ).toString( fn );
+            QString version = o.value( "version" ).toString( "-" );
+            QString description = o.value( "description" ).toString();
+
+            cDebug() << "imageselection: found image" << name << version << description;
+            m_availableImages << name;
+
+            auto* item = new QTreeWidgetItem( ui->treeWidget );
+            item->setText( 0, name );
+            item->setText( 1, version );
+            item->setText( 2, description );
+            item->setFlags( item->flags() | Qt::ItemIsUserCheckable );
+            item->setCheckState( 0, Qt::Unchecked );
+
+            item->setData( 0, Qt::UserRole, dir.absoluteFilePath( gz_image ) );          // original JSON file path
+            continue;
+        }
         f.close();
 
-        QJsonObject o = doc.object();
-        QString name = o.value( "name" ).toString( fn );
-        QString version = o.value( "version" ).toString( "-" );
-        QString description = o.value( "description" ).toString();
 
-        cDebug() << "imageselection: found image" << name << version << description;
-        m_availableImages << name;
-
-        auto* item = new QTreeWidgetItem( ui->treeWidget );
-        item->setText( 0, name );
-        item->setText( 1, version );
-        item->setText( 2, description );
-        item->setFlags( item->flags() | Qt::ItemIsUserCheckable );
-        item->setCheckState( 0, Qt::Unchecked );
-
-        item->setData( 0, Qt::UserRole, dir.absoluteFilePath( gz_image ) );          // original JSON file path
     }
 }
 
