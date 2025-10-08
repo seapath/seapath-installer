@@ -111,7 +111,7 @@ bool ImageSelectionPage::hasSelection() const
 void
 ImageSelectionPage::scanAvailableImages()
 {
-    QDir dir( "/SEAPATH/images" );
+    QDir dir( "/seapath/images" );
 
     QStringList json_files = dir.entryList( QStringList() << "*.json", QDir::Files );
     cDebug() << "imageselection: scanning" << dir.path() << "found" << json_files.size() << "json file(s)";
