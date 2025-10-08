@@ -81,7 +81,7 @@ bool SshKeySelectionPage::hasSelection() const
 void
 SshKeySelectionPage::scanAvailableKeys()
 {
-    QDir dir("/SEAPATH/keys");
+    QDir dir("/seapath/ssh");
 
     QStringList pub_files = dir.entryList(QStringList() << "*.pub", QDir::Files);
     cDebug() << "sshkeyselection: scanning" << dir.path() << "found" << pub_files.size() << "key file(s)";
