@@ -13,8 +13,6 @@
 #
 
 import os
-import shutil
-
 import libcalamares
 
 import gettext
@@ -75,16 +73,33 @@ def create_network_file(
     network_interface_name,
     ip_address_with_mask,
     gateway,
+    use_dhcp=False,
 ):
     """
     Create the systemd-networkd configuration file with network interface name,
     IPv4 address with the subnet mask value as well as the gateway address at
     systemd_networkd_config_file_path of the live user with NETWORKD_CONFIG_FILE_NAME.
+    Format of the content:
+        [Match]
+        Name=enp3s0
+
+        [Network]
+        Address=1.1.1.1/24
+        Gateway=1.1.1.1
+    If the using dhcp, the file will have corresponding content:
+        [Match]
+        Name=ensp3s0
+
+        [Network]
+        DHCP=ipv4
     """
     content = (
         f"[Match]\nName={network_interface_name}\n\n"
         + f"[Network]\nAddress={ip_address_with_mask}\nGateway={gateway}"
     )
+
+    if use_dhcp:
+        content = f"[Match]\nName={network_interface_name}\n\n" + "[Network]\nDHCP=ipv4"
 
     try:
         with open(systemd_networkd_config_file_path, "w") as file:
@@ -111,11 +126,16 @@ def run():
             ),
         )
 
+    use_dhcp = libcalamares.globalstorage.value("useDhcp")
     network_interface_name = libcalamares.globalstorage.value("networkInterface")
-    ip_address = libcalamares.globalstorage.value("ipAddress")
-    mask = libcalamares.globalstorage.value("mask")
-    gateway = libcalamares.globalstorage.value("gateway")
-    ip_address_with_mask = complete_ipv4_address(ip_address, mask)
+    if not use_dhcp:
+        ip_address = libcalamares.globalstorage.value("ipAddress")
+        mask = libcalamares.globalstorage.value("mask")
+        gateway = libcalamares.globalstorage.value("gateway")
+        ip_address_with_mask = complete_ipv4_address(ip_address, mask)
+    else:
+        ip_address_with_mask = ""
+        gateway = ""
 
     network_cfg_path = os.path.join(etc_mount_point, NETWORKD_CONFIG_DIR_AT_ETC)
     if not os.path.exists(network_cfg_path):
@@ -127,4 +147,5 @@ def run():
         network_interface_name,
         ip_address_with_mask,
         gateway,
+        use_dhcp,
     )
