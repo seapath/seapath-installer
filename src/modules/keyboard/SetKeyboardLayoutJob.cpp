@@ -345,14 +345,14 @@ SetKeyboardLayoutJob::exec()
     // Read the location of the destination's / in the host file system from
     // the global settings
     Calamares::GlobalStorage* gs = Calamares::JobQueue::instance()->globalStorage();
-    QDir destDir( gs->value( "rootMountPoint" ).toString() );
+    QDir destDir( gs->value( "etcMountPoint" ).toString() );
 
     // Skip this if we are using locale1 and we are configuring the local system,
     // since the service will have already updated these configs for us.
     if ( !( m_skipIfNoRoot && ( destDir.isEmpty() || destDir.isRoot() ) ) )
     {
         // Get the path to the destination's /etc/vconsole.conf
-        QString vconsoleConfPath = destDir.absoluteFilePath( "etc/vconsole.conf" );
+        QString vconsoleConfPath = destDir.absoluteFilePath( "vconsole.conf" );
 
         // Get the path to the destination's path to the converted key mappings
         QString convertedKeymapPath = m_convertedKeymapPath;
@@ -388,7 +388,7 @@ SetKeyboardLayoutJob::exec()
         }
         else
         {
-            xorgConfDPath = destDir.absoluteFilePath( "etc/X11/xorg.conf.d" );
+            xorgConfDPath = destDir.absoluteFilePath( "X11/xorg.conf.d" );
             keyboardConfPath = QDir( xorgConfDPath ).absoluteFilePath( m_xOrgConfFileName );
         }
         destDir.mkpath( xorgConfDPath );
@@ -403,9 +403,9 @@ SetKeyboardLayoutJob::exec()
 
     {
         QString defaultKeyboardPath;
-        if ( QDir( destDir.absoluteFilePath( "etc/default" ) ).exists() )
+        if ( QDir( destDir.absoluteFilePath( "default" ) ).exists() )
         {
-            defaultKeyboardPath = destDir.absoluteFilePath( "etc/default/keyboard" );
+            defaultKeyboardPath = destDir.absoluteFilePath( "default/keyboard" );
         }
 
         if ( !defaultKeyboardPath.isEmpty() && m_writeEtcDefaultKeyboard )
