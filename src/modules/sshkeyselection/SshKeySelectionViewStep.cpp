@@ -24,8 +24,6 @@ SshKeySelectionViewStep::SshKeySelectionViewStep( QObject* parent )
     , m_widget( new SshKeySelectionPage( m_config ) )
 {
     auto jq = Calamares::JobQueue::instance();
-    connect( jq, &Calamares::JobQueue::failed, m_config, &Config::onInstallationFailed );
-    connect( jq, &Calamares::JobQueue::failed, m_widget, &SshKeySelectionPage::onInstallationFailed );
 
     emit nextStatusChanged( true );
             connect( m_widget, &SshKeySelectionPage::selectionChanged,
@@ -84,24 +82,11 @@ SshKeySelectionViewStep::isAtEnd() const
 }
 
 
-void
-SshKeySelectionViewStep::onActivate()
-{
-    m_config->doNotify();
-    connect( qApp, &QApplication::aboutToQuit, m_config, qOverload<>( &Config::doRestart ) );
-}
-
-
 Calamares::JobList
 SshKeySelectionViewStep::jobs() const
 {
     return Calamares::JobList();
 }
 
-void
-SshKeySelectionViewStep::setConfigurationMap( const QVariantMap& configurationMap )
-{
-    m_config->setConfigurationMap( configurationMap );
-}
 
 CALAMARES_PLUGIN_FACTORY_DEFINITION( SshKeySelectionViewStepFactory, registerPlugin< SshKeySelectionViewStep >(); )

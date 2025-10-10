@@ -36,11 +36,9 @@ public:
     bool isAtBeginning() const override;
     bool isAtEnd() const override;
 
-    void onActivate() override;
 
     Calamares::JobList jobs() const override;
 
-    void setConfigurationMap( const QVariantMap& configurationMap ) override;
 
 private:
     Config* m_config;

@@ -35,7 +35,6 @@ public:
 
 public slots:
     void onInstallationFailed( const QString& message, const QString& details );
-    void retranslate();
 
 
 protected:

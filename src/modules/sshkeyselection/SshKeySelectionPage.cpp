@@ -126,12 +126,4 @@ void
 SshKeySelectionPage::onInstallationFailed( const QString& message, const QString& details )
 {
     m_failure = !message.isEmpty() ? message : details;
-    retranslate();
-}
-
-void
-SshKeySelectionPage::retranslate()
-{
-
-    const auto* branding = Calamares::Branding::instance();
 }
