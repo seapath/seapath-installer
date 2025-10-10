@@ -193,6 +193,8 @@ Config::setUseDhcpForStaticIp( bool useDhcp )
     m_useDhcpForStaticIp = useDhcp;
     Calamares::GlobalStorage* gs = Calamares::JobQueue::instance()->globalStorage();
     gs->insert( "useDhcp", useDhcp );
+
+    emit useDhcpForStaticIpChanged ( useDhcp );
 }
 
 bool
