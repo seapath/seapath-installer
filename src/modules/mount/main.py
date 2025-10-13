@@ -104,19 +104,7 @@ def mount_overlay(lowerdir, upperdir, workdir, mount_point, options=None):
         )
 
 
-def get_seapath_flavor(image_name):
-    """
-    Gets seapath flavor from the image name.
-    """
-    if "debian" in image_name.lower():
-        libcalamares.globalstorage.insert("seapath_flavor", "debian")
-        return "debian"
-    else:
-        libcalamares.globalstorage.insert("seapath_flavor", "yocto")
-    return "yocto"
-
-
-def get_partitions(device_name):
+def get_partitions(device_name, seapath_flavor):
     """
     This processes the output of lsblk to get rootfs and persistent partitions.
     The output of lsblk will be like:
@@ -143,9 +131,8 @@ def get_partitions(device_name):
     except subprocess.CalledProcessError:
         libcalamares.utils.warning(f"Failed to list partitions of {device_name}.")
 
-    selected_image_name = libcalamares.globalstorage.value("imageselection.selected")[0]
     persistent_partition = ""
-    if get_seapath_flavor(selected_image_name) == "debian":
+    if seapath_flavor == "debian":
         rootfs_partition = partitions[2]
     else:
         rootfs_partition = partitions[3]
@@ -169,11 +156,8 @@ def run():
     os.makedirs(rootfs0_mount_point, exist_ok=True)
     os.makedirs(persistent_mount_point, exist_ok=True)
 
-    rootfs_partition, persistent_partition = get_partitions(target_disk)
-
-    seapath_flavor = get_seapath_flavor(
-        libcalamares.globalstorage.value("imageselection.selected")[0]
-    )
+    seapath_flavor = libcalamares.globalstorage.value("seapathFlavor")
+    rootfs_partition, persistent_partition = get_partitions(target_disk, seapath_flavor)
 
     mount_partition(rootfs_partition, rootfs0_mount_point)
 

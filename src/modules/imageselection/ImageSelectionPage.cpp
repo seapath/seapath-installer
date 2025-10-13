@@ -94,8 +94,16 @@ ImageSelectionPage::ImageSelectionPage( Config* config, QWidget* parent )
 
         auto* gs = Calamares::JobQueue::instance()->globalStorage();
         gs->insert( "imageselection.selected", selected );
-        // gs->insert( "imageselection.primary", selected.isEmpty() ? QString() : selected.first() );
         gs->insert( "imageselection.selectedFiles", selectedFiles );
+
+        if ( selected[0].toLower().contains("debian") )
+        {
+            gs->insert( "seapathFlavor", "debian" );
+        }
+        else
+        {
+            gs->insert( "seapathFlavor", "yocto" );
+        }
 
     } );
 }
