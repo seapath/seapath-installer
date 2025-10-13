@@ -78,8 +78,13 @@ def run():
     try:
         # Run the script on the host; switch to target_env_process_output(),
         # if it must run in target chroot.
+        bmaptool_cmd = ["bmaptool", "--debug", "copy"]
+        if gs.value("seapathFlavor") == "debian":
+            bmaptool_cmd.append("--nobmap")
+
+        bmaptool_cmd.extend([image, target_device])
         host_env_process_output(
-            ["bmaptool", "-d", "copy", image, target_device],
+            bmaptool_cmd,
             output_cb,  # callback for streaming output
         )
         rc = 0
