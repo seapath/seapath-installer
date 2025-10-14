@@ -114,7 +114,12 @@ def run():
     """
     Setup network configuration
     """
-    etc_mount_point = libcalamares.globalstorage.value("etcMountPoint")
+    if libcalamares.globalstorage.value("seapathFlavor") == "debian":
+        root_mount_point = libcalamares.globalstorage.value("rootMountPoint")
+        etc_mount_point = root_mount_point + "/etc"
+    else:
+        etc_mount_point = libcalamares.globalstorage.value("etcMountPoint")
+
     if etc_mount_point is None:
         libcalamares.utils.warning(
             "etcMountPoint is empty, {!s}".format(etc_mount_point)

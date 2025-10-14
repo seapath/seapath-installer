@@ -152,6 +152,7 @@ def run():
     libcalamares.globalstorage.insert("etcMountPoint", etc_mount_point)
 
     rootfs0_mount_point = "/mnt/rootfs0"
+    libcalamares.globalstorage.insert("rootMountPoint", rootfs0_mount_point)
     persistent_mount_point = "/mnt/persistent"
     os.makedirs(rootfs0_mount_point, exist_ok=True)
     os.makedirs(persistent_mount_point, exist_ok=True)
