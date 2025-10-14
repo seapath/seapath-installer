@@ -34,19 +34,7 @@ image = gs.value("imageselection.selectedFiles")[0]
 libcalamares.utils.debug(f"Selected image: {image}")
 
 
-def get_device(partition):
-    device = ""
-    try:
-        device = subprocess.check_output(
-            ["lsblk", "-no", "PKNAME", partition], text=True
-        )
-    except subprocess.CalledProcessError as e:
-        libcalamares.utils.error(f"Failed to get device for partition {partition}: {e}")
-        raise
-    return f"/dev/{device.strip()}"
-
-
-target_device = get_device(gs.value("partitions")[1]["device"])
+target_device = gs.value("selectedDisk")
 
 
 def pretty_name():
