@@ -28,8 +28,6 @@ _ = gettext.translation(
     fallback=True,
 ).gettext
 
-SSH_KEYSDIR_AT_HOME = "admin/.ssh"
-
 
 def pretty_name():
     return _("Mounting partitions.")
@@ -142,9 +140,6 @@ def get_partitions(device_name, seapath_flavor):
 
 def run():
     target_disk = libcalamares.globalstorage.value("selectedDisk")
-    sshkey = libcalamares.globalstorage.value("sshkeyselection.selectedKeys")
-    libcalamares.utils.debug("sshkeyselection: selected keys: {!s}".format(sshkey))
-    libcalamares.utils.debug("target disk is {!s}".format(target_disk))
 
     home_mount_point = tempfile.mkdtemp(prefix="calamares-home-")
     etc_mount_point = tempfile.mkdtemp(prefix="calamares-etc-")
@@ -178,10 +173,3 @@ def run():
             etc_mount_point,
             options="rw,relatime",
         )
-        sshdir = os.path.join(home_mount_point, SSH_KEYSDIR_AT_HOME)
-        os.makedirs(sshdir, exist_ok=True)
-    else:
-        sshdir = os.path.join(rootfs0_mount_point, "home", SSH_KEYSDIR_AT_HOME)
-
-    for key in sshkey:
-        append_to_file(key, os.path.join(sshdir, "authorized_keys"))
