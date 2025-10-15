@@ -88,23 +88,32 @@ ImageSelectionPage::ImageSelectionPage( Config* config, QWidget* parent )
                 cDebug() << "debug:" << selectedFiles;
             }
         }
+
         cDebug() << "imageselection: selected images:" << selected;
         cDebug() << "imageselection: selected files:" << selectedFiles;
-        emit selectionChanged( !selected.isEmpty() );
 
-        auto* gs = Calamares::JobQueue::instance()->globalStorage();
-        gs->insert( "imageselection.selected", selected );
-        gs->insert( "imageselection.selectedFiles", selectedFiles );
-
-        if ( selected[0].toLower().contains("debian") )
+        if ( !selected.isEmpty() )
         {
-            gs->insert( "seapathFlavor", "debian" );
-        }
-        else
-        {
-            gs->insert( "seapathFlavor", "yocto" );
+            emit selectionChanged( !selected.isEmpty() );
+
+            auto* gs = Calamares::JobQueue::instance()->globalStorage();
+            gs->insert( "imageselection.selected", selected );
+            gs->insert( "imageselection.selectedFiles", selectedFiles );
+
+            if ( selected[0].toLower().contains("debian") )
+            {
+                gs->insert( "seapathFlavor", "debian" );
+            }
+            else
+            {
+                gs->insert( "seapathFlavor", "yocto" );
+            }
         }
 
+        else{
+            // Disable next button if nothing selected
+            emit selectionChanged( selected.isEmpty() );
+        }
     } );
 }
 
