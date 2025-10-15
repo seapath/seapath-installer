@@ -66,7 +66,7 @@ ImageSelectionViewStep::isNextEnabled() const
 bool
 ImageSelectionViewStep::isBackEnabled() const
 {
-    return false;
+    return true;
 }
 
 
