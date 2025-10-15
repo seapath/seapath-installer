@@ -81,11 +81,10 @@ SshKeySelectionViewStep::isAtEnd() const
     return true;
 }
 
-
-Calamares::JobList
+QList< Calamares::job_ptr >
 SshKeySelectionViewStep::jobs() const
 {
-    return Calamares::JobList();
+    return m_config->createJobs();
 }
 
 

@@ -11,7 +11,8 @@
 #define SSHKEYSELECTION_CONFIG_H
 
 #include "utils/NamedEnum.h"
-
+#include "utils/Logger.h"
+#include "SshKeySelectionJob.h"
 #include <QObject>
 
 class Config : public QObject
@@ -19,6 +20,7 @@ class Config : public QObject
     Q_OBJECT
 public:
     Config( QObject* parent = nullptr );
+    Calamares::JobList createJobs();
 
 private:
 

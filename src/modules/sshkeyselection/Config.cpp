@@ -8,8 +8,23 @@
  */
 
 #include "Config.h"
+#include "SshKeySelectionJob.h"
+
+#include "JobQueue.h"
+
 
 Config::Config( QObject* parent )
     : QObject( parent )
 {
+}
+
+Calamares::JobList
+Config::createJobs()
+{
+    QList< Calamares::job_ptr > list;
+
+    Calamares::Job* j = new SshKeySelectionJob( true );
+    list.append( Calamares::job_ptr( j ) );
+
+    return list;
 }

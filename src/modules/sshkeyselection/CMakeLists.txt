@@ -6,6 +6,7 @@ calamares_add_plugin(sshkeyselection
         Config.cpp
         SshKeySelectionPage.cpp
         SshKeySelectionViewStep.cpp
+        SshKeySelectionJob.cpp
     UI
         SshKeySelectionPage.ui
     LINK_PRIVATE_LIBRARIES
