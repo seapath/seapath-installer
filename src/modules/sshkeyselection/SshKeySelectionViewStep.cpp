@@ -64,7 +64,7 @@ SshKeySelectionViewStep::isNextEnabled() const
 bool
 SshKeySelectionViewStep::isBackEnabled() const
 {
-    return false;
+    return true;
 }
 
 
