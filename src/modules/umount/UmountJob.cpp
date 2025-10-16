@@ -137,21 +137,29 @@ UmountJob::exec()
 
     Calamares::GlobalStorage* gs
         = Calamares::JobQueue::instance() ? Calamares::JobQueue::instance()->globalStorage() : nullptr;
-    if ( !gs || gs->value( "rootMountPoint" ).toString().isEmpty() )
+    if ( !gs )
     {
         return Calamares::JobResult::internalError(
-            "UMount", tr( "No rootMountPoint is set." ), Calamares::JobResult::InvalidConfiguration );
+            "UMount", tr( "GlobalStorage is not available." ), Calamares::JobResult::InvalidConfiguration );
     }
 
-    // Do the unmounting of target-system filesystems
+    // Factorized list of mount point keys to process in order.
+    const QList<QString> mountKeys { "rootMountPoint", "homeMountPoint", "etcMountPoint" };
+    for ( const auto& key : mountKeys )
     {
-        auto r = unmountTargetMounts( gs->value( "rootMountPoint" ).toString() );
+        QString mp = gs->value( key ).toString();
+        if ( mp.isEmpty() )
+        {
+            return Calamares::JobResult::internalError(
+                "UMount", tr( "No %1 is set." ).arg( key ), Calamares::JobResult::InvalidConfiguration );
+        }
+        cDebug() << "UmountJob: processing" << key << "at" << mp;
+        auto r = unmountTargetMounts( mp );
         if ( !r )
         {
             return r;
         }
     }
-
     // For ZFS systems, export the pools
     {
         auto r = exportZFSPools();
