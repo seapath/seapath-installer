@@ -42,11 +42,34 @@ status = _("SEAPATH python step {}").format(0)
 def pretty_status_message():
     return status
 
+def remove_volume_group(mount_point):
+
+    try:
+        vg = subprocess.run(
+            ["/usr/sbin/vgdisplay"], check=True, capture_output=True, text=True
+        )
+    except subprocess.CalledProcessError:
+        # Volume group does not exist; nothing to do
+        libcalamares.utils.error(f"Failed to list volume group on: {mount_point}")
+        raise
+
+    if(vg.stdout != ""):
+        try:
+            subprocess.run(
+                ["/usr/sbin/vgremove", "-y", "vg2"], check=True
+            )
+        except subprocess.CalledProcessError:
+            libcalamares.utils.warning(f"Failed to disable volume group on: {mount_point}")
+            raise
+
 
 def run():
     """Raw image copy module"""
     gs = libcalamares.globalstorage
     image = gs.value("imageselection.selectedFiles")[0]
+    seapath_flavor = libcalamares.globalstorage.value("seapathFlavor")
+
+    libcalamares.utils.debug("SEAPATH flavor selected: {}".format(seapath_flavor))
     libcalamares.utils.debug(f"Selected image: {image}")
 
     target_device = gs.value("selectedDisk")
@@ -71,6 +94,9 @@ def run():
                 libcalamares.utils.debug(
                     f"Could not parse progression from line: {line}"
                 )
+
+    libcalamares.utils.debug("Removing LVM volume groups on target device")
+    remove_volume_group(target_device)
 
     try:
         # Run the script on the host; switch to target_env_process_output(),
