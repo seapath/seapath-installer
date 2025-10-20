@@ -140,10 +140,6 @@ def get_partitions(device_name, seapath_flavor):
 def run():
     target_disk = libcalamares.globalstorage.value("selectedDisk")
 
-    home_mount_point = tempfile.mkdtemp(prefix="calamares-home-")
-    etc_mount_point = tempfile.mkdtemp(prefix="calamares-etc-")
-    libcalamares.globalstorage.insert("homeMountPoint", home_mount_point)
-    libcalamares.globalstorage.insert("etcMountPoint", etc_mount_point)
 
     rootfs0_mount_point = "/mnt/rootfs0"
     libcalamares.globalstorage.insert("rootMountPoint", rootfs0_mount_point)
@@ -155,8 +151,13 @@ def run():
     rootfs_partition, persistent_partition = get_partitions(target_disk, seapath_flavor)
     mount_partition(rootfs_partition, rootfs0_mount_point)
 
-    # Mount overlayfs
+    # Mount overlayfs (Yocto only)
     if seapath_flavor == "yocto":
+        home_mount_point = tempfile.mkdtemp(prefix="calamares-home-")
+        etc_mount_point = tempfile.mkdtemp(prefix="calamares-etc-")
+        libcalamares.globalstorage.insert("homeMountPoint", home_mount_point)
+        libcalamares.globalstorage.insert("etcMountPoint", etc_mount_point)
+
         mount_partition(persistent_partition, persistent_mount_point)
         mount_overlay(
             f"{rootfs0_mount_point}/home",
