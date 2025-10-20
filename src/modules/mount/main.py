@@ -42,6 +42,7 @@ def enable_lv():
         raise
 
 def mount_partition(partition, mount_point):
+    libcalamares.utils.debug(f"Mounting partition: {partition} at {mount_point}")
     try:
         subprocess.run(["mount", partition, mount_point], check=True)
     except subprocess.CalledProcessError:
