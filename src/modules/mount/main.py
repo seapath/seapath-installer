@@ -101,16 +101,17 @@ def get_partitions(device_name, seapath_flavor):
     """
     try:
         result = subprocess.run(
-            ["lsblk", "--list", "--noheadings", "--output", "NAME", device_name],
+            ["lsblk", "--list", "--noheadings", "--output", "PATH", device_name],
             capture_output=True,
             text=True,
             check=True,
         )
-        partitions = ["/dev/" + word for word in result.stdout.strip().split("\n")]
+        partitions = [word for word in result.stdout.strip().split("\n")]
     except subprocess.CalledProcessError:
         libcalamares.utils.error(f"Failed to list partitions of {device_name}.")
         raise
 
+    libcalamares.utils.debug(f"List of partitions for {device_name}: {partitions}")
     persistent_partition = ""
     if seapath_flavor == "debian":
         enable_lv()
@@ -128,7 +129,8 @@ def get_partitions(device_name, seapath_flavor):
             libcalamares.utils.error(f"Failed to list partitions of {device_name}.")
             raise
 
-        rootfs_partition = partitions[2]
+        rootfs_partition_index = partitions.index("/dev/mapper/vg2-root")
+        rootfs_partition = partitions[rootfs_partition_index]
     else:
         rootfs_partition = partitions[3]
         persistent_partition = partitions[6]
