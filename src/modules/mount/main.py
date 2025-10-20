@@ -41,35 +41,6 @@ def enable_lv():
         libcalamares.utils.error("Failed to enable LVM volumes")
         raise
 
-def copy_files(source, destination):
-    try:
-        subprocess.run(["cp", "-r", source, destination], check=True)
-    except subprocess.CalledProcessError:
-        libcalamares.utils.warning(
-            f"Failed to copy files from {source} to {destination}"
-        )
-
-
-def append_to_file(source, destination):
-    """
-    Append the contents of the source file to the destination file. If the
-    destination file does not exist create it.
-    """
-    if not os.path.exists(source):
-        raise FileNotFoundError(f"The source file '{source}' does not exist.")
-
-    if os.path.exists(destination):
-        write_mode = "a"
-    else:
-        write_mode = "w"
-
-    try:
-        with open(source, "r") as src, open(destination, write_mode) as dest:
-            dest.write(src.read())
-    except IOError as e:
-        libcalamares.utils.warning(f"An I/O error occured: {e}")
-
-
 def mount_partition(partition, mount_point):
     try:
         subprocess.run(["mount", partition, mount_point], check=True)
