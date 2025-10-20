@@ -19,16 +19,39 @@ Calamares::JobResult
 SshKeySelectionJob::exec()
 {
     cDebug() << "Executing SshKeySelectionJob";
-
+    QDir destDir;
+    QString dotSSHConfPath;
     Calamares::GlobalStorage* gs = Calamares::JobQueue::instance()->globalStorage();
-    QDir destDir( gs->value( "homeMountPoint" ).toString() );
+    QString seapathFlavor = gs->value( "seapathFlavor" ).toString();
+    cDebug() << "SshKeySelectionJob: Seapath flavor:" << seapathFlavor;
+
+    if (seapathFlavor == "yocto"){
+        destDir = QDir( gs->value( "homeMountPoint" ).toString() );
+        dotSSHConfPath = destDir.absoluteFilePath( "admin/.ssh" );
+        cDebug() << "SshKeySelectionJob: writing selected keys to" << dotSSHConfPath;
+    }
+
+    else if (seapathFlavor == "debian"){
+        destDir = QDir( gs->value( "rootMountPoint" ).toString() );
+        cDebug() << "SshKeySelectionJob: Debian root mount point:" << destDir.absolutePath();
+        dotSSHConfPath = destDir.absoluteFilePath( "home/admin/.ssh" );
+        cDebug() << "SshKeySelectionJob: writing selected keys to" << dotSSHConfPath;
+    }
+    else {
+        cError() << "SshKeySelectionJob: Unknown Seapath flavor:" << seapathFlavor;
+        return Calamares::JobResult::error(
+            tr("Failed to determine Seapath flavor.", "@error"),
+            tr("Unknown Seapath flavor: %1.", "@error, %1 is the Seapath flavor").arg(seapathFlavor));
+    }
+
+    cDebug() << "SshKeySelectionJob: Destination directory:" << destDir.absolutePath();
+
     QString sshKeys = gs->value( "sshkeyselection.selectedKeys" ).toString();
     cDebug() << "SshKeySelectionJob: selected keys:" << sshKeys;
 
     if ( !( m_skipIfNoRoot && ( destDir.isEmpty() || destDir.isRoot() ) ) )
     {
-        QString dotSSHConfPath = destDir.absoluteFilePath( "admin/.ssh" );
-        cDebug() << "SshKeySelectionJob: writing selected keys to" << dotSSHConfPath;
+
 
         for (const QString& keyPath : sshKeys.split(',', Qt::SkipEmptyParts))
         {
