@@ -32,6 +32,14 @@ _ = gettext.translation(
 def pretty_name():
     return _("Mounting partitions.")
 
+def enable_lv():
+    libcalamares.utils.debug("Checking if LVM modules are enabled")
+
+    try:
+        subprocess.run(["/usr/sbin/vgchange", "-ay"], check=True)
+    except subprocess.CalledProcessError:
+        libcalamares.utils.error("Failed to enable LVM volumes")
+        raise
 
 def copy_files(source, destination):
     try:
@@ -131,6 +139,21 @@ def get_partitions(device_name, seapath_flavor):
 
     persistent_partition = ""
     if seapath_flavor == "debian":
+        enable_lv()
+
+        # We need to refresh the partition list after enabling LVM
+        try:
+            result = subprocess.run(
+                ["lsblk", "--list", "--noheadings", "--output", "PATH", device_name],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            partitions = [word for word in result.stdout.strip().split("\n")]
+        except subprocess.CalledProcessError:
+            libcalamares.utils.error(f"Failed to list partitions of {device_name}.")
+            raise
+
         rootfs_partition = partitions[2]
     else:
         rootfs_partition = partitions[3]
@@ -154,7 +177,6 @@ def run():
 
     seapath_flavor = libcalamares.globalstorage.value("seapathFlavor")
     rootfs_partition, persistent_partition = get_partitions(target_disk, seapath_flavor)
-
     mount_partition(rootfs_partition, rootfs0_mount_point)
 
     # Mount overlayfs
