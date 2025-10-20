@@ -341,11 +341,24 @@ SetKeyboardLayoutJob::writeDefaultKeyboardData( const QString& defaultKeyboardPa
 Calamares::JobResult
 SetKeyboardLayoutJob::exec()
 {
+    QDir destDir;
     cDebug() << "Executing SetKeyboardLayoutJob";
     // Read the location of the destination's / in the host file system from
     // the global settings
     Calamares::GlobalStorage* gs = Calamares::JobQueue::instance()->globalStorage();
-    QDir destDir( gs->value( "etcMountPoint" ).toString() );
+
+    QString seapathFlavor = gs->value( "seapathFlavor" ).toString();
+
+    if (seapathFlavor == "yocto"){
+        destDir = QDir( gs->value( "etcMountPoint" ).toString() );
+
+    }
+
+    else if (seapathFlavor == "debian"){
+        destDir = QDir( gs->value( "rootMountPoint" ).toString() );
+        destDir.cd( "etc" );
+    }
+
 
     // Skip this if we are using locale1 and we are configuring the local system,
     // since the service will have already updated these configs for us.
