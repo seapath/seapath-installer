@@ -74,8 +74,8 @@ def mount_partition(partition, mount_point):
     try:
         subprocess.run(["mount", partition, mount_point], check=True)
     except subprocess.CalledProcessError:
-        libcalamares.utils.warning(f"Failed to mount partition: {partition}")
-
+        libcalamares.utils.error(f"Failed to mount partition: {partition}")
+        raise
 
 def mount_overlay(lowerdir, upperdir, workdir, mount_point, options=None):
     """
@@ -85,9 +85,10 @@ def mount_overlay(lowerdir, upperdir, workdir, mount_point, options=None):
         os.makedirs(upperdir, exist_ok=True)
         os.makedirs(workdir, exist_ok=True)
     except OSError as error:
-        libcalamares.utils.warning(
+        libcalamares.utils.error(
             f"Failed to create directories for overlay with error {error} "
         )
+        raise
 
     mount_options = f"lowerdir={lowerdir},upperdir={upperdir},workdir={workdir}"
     if options:
@@ -105,9 +106,10 @@ def mount_overlay(lowerdir, upperdir, workdir, mount_point, options=None):
     try:
         subprocess.run(mount_cmd, check=True)
     except subprocess.CalledProcessError:
-        libcalamares.utils.warning(
+        libcalamares.utils.error(
             f"Failed to mount overlayfs using the command for {lowerdir}"
         )
+        raise
 
 
 def get_partitions(device_name, seapath_flavor):
@@ -135,7 +137,8 @@ def get_partitions(device_name, seapath_flavor):
         )
         partitions = ["/dev/" + word for word in result.stdout.strip().split("\n")]
     except subprocess.CalledProcessError:
-        libcalamares.utils.warning(f"Failed to list partitions of {device_name}.")
+        libcalamares.utils.error(f"Failed to list partitions of {device_name}.")
+        raise
 
     persistent_partition = ""
     if seapath_flavor == "debian":
