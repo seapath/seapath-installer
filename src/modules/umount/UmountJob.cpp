@@ -148,17 +148,16 @@ UmountJob::exec()
     for ( const auto& key : mountKeys )
     {
         QString mp = gs->value( key ).toString();
-        if ( mp.isEmpty() )
+        if ( !mp.isEmpty() )
         {
-            return Calamares::JobResult::internalError(
-                "UMount", tr( "No %1 is set." ).arg( key ), Calamares::JobResult::InvalidConfiguration );
+            cDebug() << "UmountJob: processing" << key << "at" << mp;
+            auto r = unmountTargetMounts( mp );
+            if ( !r )
+            {
+                return r;
+            }
         }
-        cDebug() << "UmountJob: processing" << key << "at" << mp;
-        auto r = unmountTargetMounts( mp );
-        if ( !r )
-        {
-            return r;
-        }
+
     }
     // For ZFS systems, export the pools
     {
