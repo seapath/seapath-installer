@@ -67,6 +67,20 @@ def complete_ipv4_address(ipaddress, mask):
     """
     return ipaddress + "/" + mask
 
+def remove_default_network_file(etc_mount_point):
+    """
+    Remove the default build_debian_iso network configuration file.
+    """
+
+    default_network_file_path = f"{etc_mount_point}/systemd/network/00-init-dhcp.network"
+    try:
+        if os.path.exists(default_network_file_path):
+            os.remove(default_network_file_path)
+    except (PermissionError, OSError):
+        libcalamares.utils.warning(
+            "Error removing file {!s}.".format(default_network_file_path) + ". Does it still exist ?"
+        )
+
 
 def create_network_file(
     systemd_networkd_config_file_path,
@@ -117,6 +131,7 @@ def run():
     if libcalamares.globalstorage.value("seapathFlavor") == "debian":
         root_mount_point = libcalamares.globalstorage.value("rootMountPoint")
         etc_mount_point = root_mount_point + "/etc"
+        remove_default_network_file(etc_mount_point)
     else:
         etc_mount_point = libcalamares.globalstorage.value("etcMountPoint")
 
