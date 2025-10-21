@@ -130,24 +130,22 @@ ImageSelectionPage::scanAvailableImages()
 {
     QDir dir( "/seapath/images" );
 
-    QStringList image_files = dir.entryList(QStringList() << "*.json" << "*.wic.gz" << "*.raw.gz" << "*.iso", QDir::Files);
+    QStringList image_files = dir.entryList(QStringList() << "*.wic.gz" << "*.raw.gz" << "*.iso", QDir::Files);
     cDebug() << "imageselection: scanning" << dir.path() << "found" << image_files.size() << "image file(s)";
     for ( const QString& fn : image_files )
     {
         QString gz_image = fn;
+        QString json = fn;
+
+        json.replace(QRegularExpression("\\.(wic\\.gz|raw\\.gz|iso)$"), ".json");
         gz_image.replace(QRegularExpression("\\.json$"), ".gz");
 
-        QFile f( dir.absoluteFilePath( fn ) );
-        if ( !f.open( QIODevice::ReadOnly ) )
-        {
-            cDebug() << "imageselection: cannot open" << f.fileName();
-            continue;
-        }
-
         cDebug() << "imageselection: found" << fn;
-
-        if ( !fn.endsWith( ".json" ) )
+        cDebug() << "imageselection: looking for metadata file" << json;
+        cDebug() << "JSON path:" << dir.absoluteFilePath( json );
+        if ( !QFile::exists( dir.absoluteFilePath( json ) ) )
         {
+            cDebug() << "imageselection: no metadata file found for" << fn;
             // Not a JSON file, just add it with minimal info
             QString name = fn;
             name.replace(QRegularExpression("\\.(wic\\.gz|raw\\.gz|iso)$"), "");
@@ -166,8 +164,15 @@ ImageSelectionPage::scanAvailableImages()
         }
 
         else {
+            QFile jsonFile( dir.absoluteFilePath( json ) );
+            if ( !jsonFile.open( QIODevice::ReadOnly ) )
+            {
+                cDebug() << "imageselection: cannot open JSON file" << jsonFile.fileName();
+                continue;
+            }
+
             QJsonParseError pe;
-            QJsonDocument doc = QJsonDocument::fromJson( f.readAll(), &pe );
+            QJsonDocument doc = QJsonDocument::fromJson( jsonFile.readAll(), &pe );
 
             QJsonObject o = doc.object();
             QString name = o.value( "name" ).toString( fn );
@@ -184,10 +189,10 @@ ImageSelectionPage::scanAvailableImages()
             item->setFlags( item->flags() | Qt::ItemIsUserCheckable );
             item->setCheckState( 0, Qt::Unchecked );
 
-            item->setData( 0, Qt::UserRole, dir.absoluteFilePath( gz_image ) );          // original JSON file path
+            item->setData( 0, Qt::UserRole, dir.absoluteFilePath( fn ) );          // original JSON file path
+            jsonFile.close();
             continue;
         }
-        f.close();
 
 
     }
