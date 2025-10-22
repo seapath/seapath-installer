@@ -3,11 +3,29 @@
  <class>ImageSelectionPage</class>
  <widget class="QWidget" name="ImageSelectionPage">
   <property name="geometry">
-   <rect><x>0</x><y>0</y><width>640</width><height>480</height></rect>
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>640</width>
+    <height>480</height>
+   </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Select the SEAPATH image to be installed on the machine.</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QTreeWidget" name="treeWidget">
+     <property name="rootIsDecorated">
+      <bool>false</bool>
+     </property>
+     <property name="uniformRowHeights">
+      <bool>true</bool>
+     </property>
      <property name="columnCount">
       <number>3</number>
      </property>
@@ -26,12 +44,6 @@
        <string>Description</string>
       </property>
      </column>
-     <property name="rootIsDecorated">
-      <bool>false</bool>
-     </property>
-     <property name="uniformRowHeights">
-      <bool>true</bool>
-     </property>
     </widget>
    </item>
   </layout>

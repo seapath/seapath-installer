@@ -36,7 +36,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     </layout>
    </item>
    <item>
-    <layout class="QVBoxLayout" name="m_rightLayout" stretch="0,1,0,0,0,0">
+    <layout class="QVBoxLayout" name="m_rightLayout" stretch="0,1,0,0,0">
      <item>
       <widget class="QLabel" name="m_messageLabel">
        <property name="toolTip">
@@ -67,7 +67,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
           <x>0</x>
           <y>0</y>
           <width>723</width>
-          <height>334</height>
+          <height>339</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="m_itemsLayout">
@@ -83,6 +83,13 @@ SPDX-License-Identifier: GPL-3.0-or-later
          <property name="bottomMargin">
           <number>0</number>
          </property>
+         <item>
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Select the disk device where SEAPATH must be installed. </string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </widget>
