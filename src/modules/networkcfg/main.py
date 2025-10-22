@@ -109,11 +109,11 @@ def create_network_file(
     """
     content = (
         f"[Match]\nName={network_interface_name}\n\n"
-        + f"[Network]\nAddress={ip_address_with_mask}\nGateway={gateway}"
+        + f"[Network]\nAddress={ip_address_with_mask}\nGateway={gateway}\n"
     )
 
     if use_dhcp:
-        content = f"[Match]\nName={network_interface_name}\n\n" + "[Network]\nDHCP=ipv4"
+        content = f"[Match]\nName={network_interface_name}\n\n" + "[Network]\nDHCP=ipv4\n"
 
     try:
         with open(systemd_networkd_config_file_path, "w") as file:
