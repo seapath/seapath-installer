@@ -46,14 +46,14 @@ SshKeySelectionJob::exec()
 
     cDebug() << "SshKeySelectionJob: Destination directory:" << destDir.absolutePath();
 
-    QString sshKeys = gs->value( "sshkeyselection.selectedKeys" ).toString();
+    QStringList sshKeys = gs->value( "sshkeyselection.selectedKeys" ).toStringList();
     cDebug() << "SshKeySelectionJob: selected keys:" << sshKeys;
 
     if ( !( m_skipIfNoRoot && ( destDir.isEmpty() || destDir.isRoot() ) ) )
     {
 
 
-        for (const QString& keyPath : sshKeys.split(',', Qt::SkipEmptyParts))
+        for (const QString& keyPath : sshKeys)
         {
             cDebug() << "SshKeySelectionJob: processing key" << keyPath;
             QFile srcFile(keyPath);
@@ -67,7 +67,7 @@ SshKeySelectionJob::exec()
 
             QString destFilePath = dotSSHConfPath + "/authorized_keys";
             QFile destFile(destFilePath);
-            if (!destFile.open(QIODevice::Append | QIODevice::Text))
+            if (!destFile.open(QIODevice::Append))
             {
                 cError() << "SshKeySelectionJob: cannot open destination key file" << destFile.fileName();
                 return Calamares::JobResult::error(
