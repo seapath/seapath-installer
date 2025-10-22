@@ -24,7 +24,7 @@
      </property>
      <column>
       <property name="text">
-       <string>Name</string>
+       <string>Public key</string>
       </property>
      </column>
     </widget>

@@ -93,12 +93,14 @@ SshKeySelectionPage::scanAvailableKeys()
             cDebug() << "sshkeyselection: cannot open" << f.fileName();
             continue;
         }
-
+        QFileInfo sshKeyFileInfo(f.fileName());
+        QString sshFileName(sshKeyFileInfo.fileName());
         // Optionally, get the comment from the public key line
         QString keyLine = QString::fromUtf8(f.readLine()).trimmed();
         f.close();
         QString keyLabel = fn;
         QStringList parts = keyLine.split(' ', Qt::SkipEmptyParts);
+        cDebug() << "sshkeyselection: key parts:" << parts;
         if (parts.size() >= 3)
             keyLabel = parts[2]; // Use the comment as the label if present
 
@@ -107,7 +109,7 @@ SshKeySelectionPage::scanAvailableKeys()
         m_availableImages << keyLabel;
 
         auto* item = new QTreeWidgetItem(ui->treeWidget);
-        item->setText(0, keyLabel);
+        item->setText(0, sshFileName);
         item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
         item->setCheckState(0, Qt::Unchecked);
 
