@@ -144,7 +144,7 @@ UmountJob::exec()
     }
 
     // Factorized list of mount point keys to process in order.
-    const QList<QString> mountKeys { "rootMountPoint", "homeMountPoint", "etcMountPoint" };
+    const QList<QString> mountKeys { "rootMountPoint", "persistentMountPoint", "homeMountPoint", "etcMountPoint" };
     for ( const auto& key : mountKeys )
     {
         QString mp = gs->value( key ).toString();
