@@ -42,6 +42,81 @@ status = _("SEAPATH python step {}").format(0)
 def pretty_status_message():
     return status
 
+def check_disk_sanity(target_device):
+    """
+    Check if the target device has GPT errors that need to be fixed
+    before extending the persistent partition.
+    """
+
+    try: sgdisk_output = subprocess.run(
+        ["/usr/sbin/sgdisk", "-v", target_device],
+        capture_output=True,
+        text=True,
+    )
+
+    except subprocess.CalledProcessError:
+        libcalamares.utils.error(f"Failed to check disk sanity on: {target_device}")
+        raise
+
+    if "Identified" in sgdisk_output.stdout:
+        libcalamares.utils.debug(f"Disk {target_device} has GPT errors that need to be fixed.")
+        fix_disk(target_device)
+
+def fix_disk(target_device):
+    """
+    Fix GPT errors on the target device using sgdisk.
+    """
+
+    try:
+        subprocess.run(
+            ["/usr/sbin/sgdisk", "-e", target_device],
+            check=True,
+        )
+    except subprocess.CalledProcessError:
+        libcalamares.utils.error(f"Failed to fix disk GPT on: {target_device}")
+        raise
+
+def extend_persistent_partition(target_device):
+    """
+    Extend the persistent partition to use all available space on the target device.
+    """
+
+    check_disk_sanity(target_device)
+
+    try:
+        subprocess.run(
+            ["/usr/sbin/parted", target_device, "resizepart", "6", "100%"],
+            check=True,
+        )
+    except subprocess.CalledProcessError:
+        libcalamares.utils.error(f"Failed to extend persistent partition on: {target_device}")
+        raise
+
+    check_fs(target_device)
+
+    try:
+        subprocess.run(
+            ["/usr/sbin/resize2fs", f"{target_device}6"],
+            check=True,
+        )
+    except subprocess.CalledProcessError:
+        libcalamares.utils.error(f"Failed to resize filesystem on: {target_device}6")
+        raise
+
+def check_fs(target_device):
+    """
+    Check and repair the filesystem on the persistent partition.
+    """
+
+    try:
+        subprocess.run(
+            ["/usr/sbin/e2fsck", "-f", "-y", f"{target_device}6"],
+            check=True,
+        )
+    except subprocess.CalledProcessError:
+        libcalamares.utils.error(f"Failed to check filesystem on: {target_device}6")
+        raise
+
 def remove_volume_group(mount_point):
 
     try:
@@ -115,6 +190,9 @@ def run():
         rc = e.returncode
         libcalamares.utils.warning(f"Script failed rc={rc}")
         libcalamares.utils.debug("\n".join(output_lines))
+
+    if seapath_flavor == "yocto":
+        extend_persistent_partition(target_device)
 
     if rc != 0:
         return (
