@@ -137,6 +137,8 @@ UmountJob::exec()
 
     Calamares::GlobalStorage* gs
         = Calamares::JobQueue::instance() ? Calamares::JobQueue::instance()->globalStorage() : nullptr;
+
+    QString seapathFlavor = gs->value("seapathFlavor").toString();
     if ( !gs )
     {
         return Calamares::JobResult::internalError(
@@ -148,6 +150,13 @@ UmountJob::exec()
     for ( const auto& key : mountKeys )
     {
         QString mp = gs->value( key ).toString();
+
+        if (seapathFlavor == "debian" && key == "persistentMountPoint") {
+            // Persistent mount point is exclusive of Yocto flavor
+            continue;
+        }
+
+
         if ( !mp.isEmpty() )
         {
             cDebug() << "UmountJob: processing" << key << "at" << mp;
