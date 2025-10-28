@@ -157,6 +157,12 @@ public:
 
     void setPartitionFlags( Device* device, Partition* partition, PartitionTable::Flags flags );
 
+    /**
+     * @brief Preview-only insertion of a new partition into the in-memory model without
+     * creating any jobs.
+    **/
+    void previewCreatePartition( Device* device, Partition* partition );
+
     /// @brief Retrieve the path where the bootloader will be installed
     QString bootLoaderInstallPath() const { return m_bootLoaderInstallPath; }
     /// @brief Set the path where the bootloader will be installed

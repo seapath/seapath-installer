@@ -428,6 +428,25 @@ PartitionCoreModule::createPartition( Device* device, Partition* partition, Part
 }
 
 void
+PartitionCoreModule::previewCreatePartition( Device* device, Partition* partition )
+{
+    if ( !device || !partition || !device->partitionTable() )
+    {
+        return;
+    }
+
+    if ( !partition->parent() )
+    {
+        cWarning() << "previewCreatePartition called with partition lacking parent()";
+        return;
+    }
+
+    device->partitionTable()->removeUnallocated();
+    partition->parent()->insert( partition );
+    device->partitionTable()->updateUnallocated( *device );
+}
+
+void
 PartitionCoreModule::createVolumeGroup( QString& vgName, QVector< const Partition* > pvList, qint32 peSize )
 {
     // Appending '_' character in case of repeated VG name
