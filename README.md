@@ -1,66 +1,166 @@
-<!-- SPDX-FileCopyrightText: no
-     SPDX-License-Identifier: CC0-1.0
--->
+<!--Copyright (C) 2025 Savoir-faire Linux, Inc.
+SPDX-License-Identifier: GPL-3.0-or-later -->
 
-# Calamares: Distribution-Independent Installer Framework
----------
+# seapath-installer
 
-[![Current issue](https://img.shields.io/badge/issue-in_progress-FE9B48)](https://codeberg.org/Calamares/calamares/issues?labels=306730)
-[![Releases](https://img.shields.io/github/release/calamares/calamares.svg)](https://codeberg.org/Calamares/calamares/releases)
-[![License](https://img.shields.io/badge/license-Multiple-green)](./LICENSES)
+> A customized installer for SEAPATH based on Calamares framework.
+
+seapath-installer is the universal installer solution to install
+SEAPATH (Debian & Yocto) on a target machine.
+
+> **NOTE:**  This project only concerns the installer application. It
+> does not generate the live OS installer. See [seapath-live-installer](https://github.com/seapath/seapath-live-installer)
+
+## Fork Information
+
+This project is a fork of [Calamares](https://codeberg.org/Calamares/calamares),
+a distribution-independent system installer framework.
+
+**Upstream**: https://codeberg.org/Calamares/calamares
+
+## SEAPATH-Specific Features
+
+- Custom SEAPATH image selection module
+- SSH key configuration
+- Network configuration
+- Custom raw image installation module powered by bmaptools
+- SEAPATH image partition layout preview
 
 
-| [Report a Bug](https://codeberg.org/Calamares/calamares/issues/new) | [Translate](https://app.transifex.com/calamares/calamares/) | [Contribute](CONTRIBUTING.md) | [Chat on Matrix: #calamares:kde.org](https://matrix.to/#/#calamares:kde.org)
-|:--:|:--:|:--:|:--:|
+## Installation
 
+### Prerequisites
 
-> Calamares is a distribution-independent system installer, with an advanced partitioning
-> feature for both manual and automated partitioning operations. Calamares is designed to
-> be customizable by distribution maintainers without the need for cumbersome patching,
-> thanks to third-party branding and external modules support.
+seapath-installer is already configured to build Calamares in a Docker
+container using [cqfd](https://github.com/savoirfairelinux/cqfd), and
+we strongly recommend using it to build the installer.
 
-## Target Audience
-
-Calamares is a Linux installer; users who install Linux on a computer will hopefully
-use it just **once**, to install their Linux distribution. Calamares is not
-a "ready to use" application: distributions apply a huge amount of customization
-and configuration to Calamares, and the target audience for this repository
-is those distributions, and the people who make those Linux distros.
-
-Calamares has some [generic user documentation](https://calamares.io/docs/users-guide/)
-for end-users, but most of what we have is for distro developers.
-
-## Getting Calamares
-
-Clone Calamares from Codeberg. The default branch is called *calamares*.
+Make sure your localhost system complies with the following
+dependencies:
 
 ```
-git clone https://codeberg.org/Calamares/calamares.git
+docker
 ```
 
-Calamares is a KDE-Frameworks and Qt-based, C++17, CMake-built application.
-The dependencies are explained in [CONTRIBUTING.md](CONTRIBUTING.md).
+Install `cqfd`:
+```
+git clone https://github.com/savoirfairelinux/cqfd.git
+cd cqfd
+sudo make install
+```
 
-## Contributing to Calamares
+If you wish to build seapath-installer without Docker (again, not
+recommended), make sure the dependencies listed in `.cqfd/Dockerfile`
+are installed on your system (Debian 12).
 
-Calamares welcomes PRs. New issues are welcome, too.
-There are both the Calamares **core** repository (this one)
-and an **extensions** repository ([Calamares extensions](https://codeberg.org/Calamares/calamares-extensions)).
+> **NOTE:** seapath-installer is currently only supported using QT5 platform.
 
-Contributions to code, modules, documentation, the wiki, and the website are all welcome.
-There is more information in the [CONTRIBUTING.md](CONTRIBUTING.md) file.
+## Getting Started
+### Building seapath-installer
 
-## Join the Conversation
+To build seapath-installer using `cqfd`, first generate the cqfd image:
 
-Issues are **one** place for discussing Calamares if there are concrete
-problems or a new feature to discuss.
-Issues are not a help channel.
-Visit Matrix for help with configuration or compilation.
+```
+cqfd init
+```
 
-Regular Calamares development chit-chat happens in a [Matrix](https://matrix.org/)
-room, `#calamares:kde.org`. Responsiveness is best during the day
-in Europe, but feel free to idle.
-Matrix is persistent, and we'll see your message eventually.
+Then, build the installer:
 
-* [![Join us on Matrix](https://img.shields.io/badge/Matrix-%23calamares:kde.org-blue)](https://matrix.to/#/#calamares:kde.org) (needs a Matrix account)
+```
+cqfd
+```
 
+To build outside of cqfd, run:
+```
+./build.sh
+```
+
+If everything went well, a `.deb` package will be created in the root
+directory of the project.
+
+> **NOTE:** `seapath-installer` is currently only supported on Debian 12
+> systems using QT5 platform.
+
+### Installing seapath-installer
+
+To install seapath-installer, first copy the generated `.deb` package to
+the target machine, then run:
+
+```
+sudo apt install ./seapath-installer-<version>.deb
+```
+
+### Running seapath-installer
+
+To run seapath-installer, execute the following command in a terminal:
+
+```sudo calamares```
+
+To enable debug logging, run:
+
+```sudo calamares -d```
+
+### seapath-installer artifacts
+
+seapath-installer expects the installation artifacts (SEAPATH images,
+SSH keys, etc), to be located in a directory mounted at `/seapath` with
+the following structure:
+
+```
+/seapath
+├── images
+│   ├── seapath-debian-<version>.raw.gz
+│   └── seapath-v1.1.0-observer-efi-image.rootfs.wic.gz
+└── ssh-keys
+    └── ssh_key1.pub
+    └── ssh_key2.pub
+```
+
+Where:
+- `images/` contains the SEAPATH images to install
+- `ssh-keys/` contains the SSH public keys to add to the installed system
+
+seapath-installer is designed to install any kind of rootfs raw image, as long
+the extension are `raw.gz` or `wic.gz`. SSH keys must be valid public
+key files.
+
+
+### SEAPATH target configuration
+
+By default, the following configurations are installed on the installed SEAPATH
+system:
+
+- Keyboard layout
+- SEAPATH images
+- SSH Keys: will be append to the `~/.ssh/authorized_keys` file of
+the `admin` and `ansible` users on the installed system.
+- Network configuration: DHCP/static IP configuration for the selected
+  interface.
+> **NOTE:**: The configured network interface is only the management
+> interface used to connect to the SEAPATH machine by Ansible and the
+> `admin` user.
+- Partition: installed partition layout depends on the selected SEAPATH
+  image. It cannot be modified by the user.
+> **NOTE:**: On SEAPATH Yocto, the persistent partition is extended to
+> the maximum free space available on the target device.
+
+## Contributing
+
+See
+[CONTRIBUTING.md](https://github.com/seapath/.github/blob/main/CONTRIBUTING.md)
+for details.
+On this project, each PR is automatically checked by a CI pipeline.
+
+## License
+
+This project maintains the original Calamares licenses. See
+[LICENSES](./LICENSES) directory.
+
+## Calamares
+
+For more information about the upstream Calamares project, visit
+https://calamares.euroquis.nl/
+
+# Release notes
+## Version 1.0.0
+Initial release
