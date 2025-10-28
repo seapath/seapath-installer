@@ -47,7 +47,7 @@ class PartitionCoreModule;
 class Device;
 
 using SwapChoiceSet = Config::SwapChoiceSet;
-
+using Calamares::Units::operator""_MiB;
 /**
  * @brief The ChoicePage class is the first page of the partitioning interface.
  * It offers a choice between partitioning operations and initiates all automated
@@ -165,8 +165,10 @@ private:
     QString m_osproberOneEntryName;
 
     bool m_preCheckActivated = false;
-
     QMutex m_coreMutex;
+
+protected:
+    void showEvent( QShowEvent* event ) override;
 };
 
 #endif  // CHOICEPAGE_H

@@ -11,6 +11,19 @@
  *
  */
 
+
+#include <core/partitiontable.h>
+#include <core/device.h>
+#include <core/partition.h>
+#include <fs/filesystem.h>
+#include <fs/ext4.h>
+#include <util/globallog.h>
+#include "core/PartitionModel.h"
+#include "core/PartitionInfo.h"
+#include "tests/PartitionJobTests.h"
+#include "utils/Units.h"
+#include "core/OsproberEntry.h"
+
 #include "ChoicePage.h"
 
 #include "Config.h"
@@ -125,6 +138,17 @@ ChoicePage::ChoicePage( Config* config, QWidget* parent )
 }
 
 ChoicePage::~ChoicePage() {}
+
+void
+ChoicePage::showEvent( QShowEvent* event )
+{
+    QWidget::showEvent( event );
+    // Refresh preview each time the page becomes visible (user may have navigated back).
+    if ( m_core )
+    {
+        updateActionChoicePreview( m_config->installChoice() );
+    }
+}
 
 void
 ChoicePage::retranslate()
@@ -792,6 +816,22 @@ ChoicePage::doReplaceSelectedPartition( const QModelIndex& current )
 }
 
 /**
+ * From src/modules/partition/tests/PartitionJobTests.cpp
+ */
+static ::Partition*
+firstFreePartition( PartitionNode* parent )
+{
+    for ( auto child : parent->children() )
+    {
+        if ( Calamares::Partition::isPartitionFreeSpace( child ) )
+        {
+            return child;
+        }
+    }
+    return nullptr;
+}
+
+/**
  * @brief clear and then rebuild the contents of the preview widget
  *
  * The preview widget for the current disk is completely re-constructed
@@ -874,6 +914,7 @@ ChoicePage::updateDeviceStatePreview()
 void
 ChoicePage::updateActionChoicePreview( InstallChoice choice )
 {
+    cDebug() << "Updating partitioning action choice preview.";
     Device* currentDevice = selectedDevice();
     Q_ASSERT( currentDevice );
 
@@ -952,6 +993,86 @@ ChoicePage::updateActionChoicePreview( InstallChoice choice )
     case InstallChoice::Erase:
     case InstallChoice::Replace:
     {
+        Device* targetDevice = selectedDevice();
+
+        qint64 logicalSize = 2048; // SEAPATH default logical sector size
+        const PartitionRole role( PartitionRole::Primary );
+
+        Calamares::GlobalStorage* gs = Calamares::JobQueue::instance()->globalStorage();
+        auto gptPartitions = gs->value( "imageselection.gptPartitions" );
+
+        // Prevent accumulation of preview partitions if user switches
+        // back and forth between choices.
+        if ( m_core->isDirty() )
+        {
+            cDebug() << "Device is dirty, reverting to clean state before adding preview partitions";
+            m_core->revertDevice( targetDevice );
+            targetDevice = selectedDevice();  // Refresh the targetDevice reference
+        }
+
+        // Remove directly the partition table without creating jobs (preview only)
+        cDebug() << "Removing all existing partitions from preview (no jobs created)";
+        QList< Partition* > partitionsToDelete;
+        for ( auto* child : targetDevice->partitionTable()->children() )
+        {
+            Partition* p = dynamic_cast< Partition* >( child );
+            if ( p && !isPartitionFreeSpace( p ) )
+            {
+                partitionsToDelete.append( p );
+            }
+        }
+
+        // Directly manipulate the partition table for preview (mimics previewCreatePartition)
+        targetDevice->partitionTable()->removeUnallocated();
+        for ( auto* p : partitionsToDelete )
+        {
+            cDebug() << "Removing existing partition" << p->partitionPath() << "from preview";
+            p->parent()->remove( p );
+            delete p;
+        }
+        targetDevice->partitionTable()->updateUnallocated( *targetDevice );
+
+        for (const auto& partition : gptPartitions.toList())
+        {
+            auto partitionMap = partition.toMap();
+            auto partitionName = partitionMap.value("name").toString();
+            auto partitionFirstLBA = partitionMap.value("first_lba").toInt();
+            auto partitionLastLBA = partitionMap.value("last_lba").toInt();
+            auto partitionSize = partitionMap.value("size_sectors").toInt();
+
+            // For preview purposes, we need a parent node to attach the partition to
+            // First try to find free space, otherwise use the partition table itself
+            Partition* freePartition = firstFreePartition( targetDevice->partitionTable() );
+            PartitionNode* parentNode = freePartition ? static_cast<PartitionNode*>( freePartition->parent() )
+                                                      : static_cast<PartitionNode*>( targetDevice->partitionTable() );
+
+            if ( !parentNode )
+            {
+                cError() << "No parent node (partition table) found for preview partition" << partitionName;
+                exit( EXIT_FAILURE );
+            }
+
+            // Default to ext4, currently no support for FS preview
+            FileSystem* fs = FileSystemFactory::create( FileSystem::Ext4, partitionFirstLBA, partitionLastLBA, logicalSize );
+            Partition* previewPartition = new Partition( parentNode,
+                                                            *targetDevice,
+                                                            role,
+                                                            fs,
+                                                            partitionFirstLBA,
+                                                            partitionLastLBA,
+                                                            QString(),
+                                                            KPM_PARTITION_FLAG( None ),
+                                                            QString(),
+                                                            false,
+                                                            KPM_PARTITION_FLAG( None ),
+                                                            KPM_PARTITION_STATE( New ) );
+
+            cDebug() << "Created preview partition object for" << partitionName;
+            PartitionInfo::setFormat( previewPartition, true );
+            PartitionInfo::setMountPoint( previewPartition,  partitionName );
+            // Insert into preview without creating jobs
+            m_core->previewCreatePartition( targetDevice, previewPartition );
+        }
         m_previewBeforeLabel->setText( tr( "Current:", "@label" ) );
         m_afterPartitionBarsView = new PartitionBarsView( m_previewAfterFrame );
         m_afterPartitionBarsView->setNestedPartitionsMode( mode );
@@ -976,6 +1097,11 @@ ChoicePage::updateActionChoicePreview( InstallChoice choice )
         {
             layout->addWidget( createBootloaderPanel() );
         }
+
+        m_previewBeforeLabel->show();
+        m_previewBeforeFrame->show();
+        m_previewAfterFrame->show();
+        m_previewAfterLabel->show();
 
         if ( m_config->installChoice() == InstallChoice::Erase )
         {
