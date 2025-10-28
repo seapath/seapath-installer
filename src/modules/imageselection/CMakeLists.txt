@@ -10,5 +10,6 @@ calamares_add_plugin(imageselection
         ImageSelectionPage.ui
     LINK_PRIVATE_LIBRARIES
         ${qtname}::DBus
+        z
     SHARED_LIB
 )
