@@ -209,7 +209,7 @@ PartitionLabelsView::buildTexts( const QModelIndex& index ) const
             }
             else if ( !mountPoint.isEmpty() )
             {
-                firstLine = tr( "New partition for %1", "@label" ).arg( mountPoint );
+                firstLine = tr( "%1", "@label" ).arg( mountPoint );
             }
             else
             {
