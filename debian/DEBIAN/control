@@ -4,6 +4,7 @@ Architecture: all
 Essential: no
 Priority: optional
 Depends: os-prober,
+		bmap-tools,
 		kpackagetool5,
 		libboost-python1.74.0 (>= 1.74.0),
 		libboost-python1.74.0-py311,
