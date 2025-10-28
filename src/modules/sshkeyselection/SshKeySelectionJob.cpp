@@ -32,6 +32,7 @@ SshKeySelectionJob::exec()
 
     else if (seapathFlavor == "debian"){
         destDir = QDir( gs->value( "rootMountPoint" ).toString() );
+        destDir.cd("home");
         cDebug() << "SshKeySelectionJob: Debian root mount point:" << destDir.absolutePath();
     }
     else {
