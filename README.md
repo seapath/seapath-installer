@@ -5,6 +5,10 @@ SPDX-License-Identifier: GPL-3.0-or-later -->
 
 > A customized installer for SEAPATH based on Calamares framework.
 
+
+![alt text](seapath-installer-screenshot.png "Title")
+
+
 seapath-installer is the universal installer solution to install
 SEAPATH (Debian & Yocto) on a target machine.
 
