@@ -98,8 +98,6 @@ def extend_persistent_partition(target_device):
     else:
         persistent_partition_name = f"{target_device}6"
 
-    check_fs(persistent_partition_name)
-
     try:
         subprocess.run(
             ["/usr/sbin/resize2fs", persistent_partition_name],
@@ -108,6 +106,10 @@ def extend_persistent_partition(target_device):
     except subprocess.CalledProcessError:
         libcalamares.utils.error(f"Failed to resize filesystem on: {persistent_partition_name}")
         raise
+
+    # This must be called after resize2fs as the resized filesystem may
+    # have issues that need to be fixed (e.g. with NVME devices)
+    check_fs(persistent_partition_name)
 
 def check_fs(target_partition_name):
     """
@@ -119,9 +121,12 @@ def check_fs(target_partition_name):
             ["/usr/sbin/e2fsck", "-f", "-y", target_partition_name],
             check=True,
         )
-    except subprocess.CalledProcessError:
-        libcalamares.utils.error(f"Failed to check filesystem on: {target_partition_name}")
-        raise
+    except subprocess.CalledProcessError as err:
+        # e2fsck return 1 if filesystem errors where detected by corrected
+        if err.returncode != 1:
+            libcalamares.utils.error(f"Failed to check filesystem on: {target_partition_name}")
+            raise
+
 
 def remove_volume_group(mount_point):
 
