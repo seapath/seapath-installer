@@ -112,8 +112,8 @@ ImageSelectionViewStep::onLeave()
 
     if ( selectedFiles.isEmpty() )
     {
-        cError() << "No image selected in imageselection module";
-        ::exit( EXIT_FAILURE );
+        cDebug() << "No selected image in imageselection page.";
+        return;
     }
 
     QString imagePath = selectedFiles.first();
