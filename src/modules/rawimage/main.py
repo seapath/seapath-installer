@@ -15,6 +15,8 @@
 import subprocess
 import re
 import gettext
+import time
+import os
 import libcalamares
 
 # Prefer the Calamares process helpers over subprocess for progress updates
@@ -76,6 +78,37 @@ def fix_disk(target_device):
         libcalamares.utils.error(f"Failed to fix disk GPT on: {target_device}")
         raise
 
+
+def wait_for_device(target_device, data_partition):
+    """
+    Wait for the kernel to update the target device with the new partitions.
+    """
+    TIMEOUT=60
+    try:
+        subprocess.run(
+            ["/usr/sbin/partprobe", target_device]
+        )
+    except subprocess.CalledProcessError:
+        libcalamares.utils.error(f"Fail to inform kernel of partition table changes")
+        raise
+
+    try:
+        subprocess.run(
+            ["/usr/bin/udevadm", "settle"]
+        )
+    except subprocess.CalledProcessError:
+        libcalamares.utils.error(f"Fail to wait for pending udev events")
+        raise
+
+    start = time.time()
+    while True:
+        if os.path.exists(data_partition):
+            break
+        if time.time() - start > TIMEOUT:
+            raise  libcalamares.utils.error(f"Partition node {data_partition} did not appear within {TIMEOUT}s")
+        time.sleep(0.5)
+
+
 def extend_persistent_partition(target_device):
     """
     Extend the persistent partition to use all available space on the target device.
@@ -97,6 +130,9 @@ def extend_persistent_partition(target_device):
         persistent_partition_name = f"{target_device}p6"
     else:
         persistent_partition_name = f"{target_device}6"
+
+
+    wait_for_device(target_device, persistent_partition_name)
 
     try:
         subprocess.run(
