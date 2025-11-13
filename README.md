@@ -166,5 +166,5 @@ For more information about the upstream Calamares project, visit
 https://calamares.euroquis.nl/
 
 # Release notes
-## Version 1.0.0
+## Version 1.1.0
 Initial release
