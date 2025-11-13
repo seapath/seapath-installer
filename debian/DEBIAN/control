@@ -1,5 +1,5 @@
 Package: seapath-installer
-Version: 1.0
+Version: 1.1.0
 Architecture: all
 Essential: no
 Priority: optional
