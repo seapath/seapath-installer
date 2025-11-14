@@ -59,7 +59,5 @@ Item {
         id: image
         source: src
         anchors.fill: parent
-        width: 1024
-        height: 600
     }
 }
