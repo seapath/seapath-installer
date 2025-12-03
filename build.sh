@@ -3,7 +3,7 @@
 export DESTDIR=/tmp/sysroot-seapath-installer
 export BUILDDIR=./build
 export CMAKE_ARGS="-DWITH_QT6=OFF"
-export VERSION="1.1.0"
+export VERSION="1.2.0"
 ./ci/build.sh
 mkdir -p seapath-installer_${VERSION}_all/etc/calamares
 mkdir -p seapath-installer_${VERSION}_all/usr/share/calamares/modules

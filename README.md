@@ -166,5 +166,10 @@ For more information about the upstream Calamares project, visit
 https://calamares.euroquis.nl/
 
 # Release notes
+## Version 1.2.0
+* Fix slideshow image display
+* Add bmap support for SEAPATH Debian images
+* Use the finishedq module instead the finished module
+
 ## Version 1.1.0
 Initial release
