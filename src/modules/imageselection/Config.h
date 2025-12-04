@@ -18,10 +18,7 @@ class Config : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY( RestartMode restartNowMode READ restartNowMode WRITE setRestartNowMode NOTIFY restartModeChanged )
-    Q_PROPERTY( bool restartNowWanted READ restartNowWanted WRITE setRestartNowWanted NOTIFY restartNowWantedChanged )
 
-    Q_PROPERTY( QString restartNowCommand READ restartNowCommand CONSTANT FINAL )
     Q_PROPERTY( bool notifyOnFinished READ notifyOnFinished CONSTANT FINAL )
 
     Q_PROPERTY( QString failureMessage READ failureMessage NOTIFY failureMessageChanged )
@@ -40,46 +37,14 @@ public:
     };
     Q_ENUM( RestartMode )
 
-    void setConfigurationMap( const QVariantMap& configurationMap );
 
 public Q_SLOTS:
-    RestartMode restartNowMode() const { return m_restartNowMode; }
-    void setRestartNowMode( RestartMode m );
-
-    bool restartNowWanted() const
-    {
-        if ( restartNowMode() == RestartMode::Never )
-        {
-            return false;
-        }
-        return ( restartNowMode() == RestartMode::Always ) || m_userWantsRestart;
-    }
-    void setRestartNowWanted( bool w );
-
-    QString restartNowCommand() const { return m_restartNowCommand; }
     bool notifyOnFinished() const { return m_notifyOnFinished; }
 
     QString failureMessage() const { return m_failureMessage; }
     QString failureDetails() const { return m_failureDetails; }
     /// Failure is if any of the failure messages is non-empty
     bool hasFailed() const { return !m_failureMessage.isEmpty() || !m_failureDetails.isEmpty(); }
-
-    /** @brief Run the restart command, if desired.
-     *
-     * This should generally not be called somewhere during the
-     * application's execution, but only in response to QApplication::quit()
-     * or something like that when the user expects the system to restart.
-     *
-     * The "if desired" part is: only if the restart mode allows it,
-     * **and** the user has checked the box (or done whatever to
-     * turn on restartNowWanted()).
-     *
-     * - The one-argument form ignores what the user wants and restarts
-     *   if @p restartAnyway is @c true **unless** the mode is Never
-     * - The no-argument form uses the user setting
-     */
-    void doRestart( bool restartAnyway );
-    void doRestart() { doRestart( restartNowWanted() ); }
 
     /** @brief Send DBus notification
      *
@@ -106,8 +71,6 @@ public Q_SLOTS:
     void onInstallationFailed( const QString& message, const QString& details );
 
 signals:
-    void restartModeChanged( RestartMode m );
-    void restartNowWantedChanged( bool w );
     void failureMessageChanged( const QString& );
     void failureDetailsChanged( const QString& );
     void failureChanged( bool );
@@ -115,7 +78,6 @@ signals:
 private:
     // Configuration parts
     QString m_restartNowCommand;
-    RestartMode m_restartNowMode = RestartMode::Never;
     bool m_userWantsRestart = false;
     bool m_notifyOnFinished = false;
 
