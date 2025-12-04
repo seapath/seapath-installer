@@ -34,6 +34,8 @@ Depends: os-prober,
 		libyaml-cpp0.7 (>= 0.7.0),
 		efibootmgr (>=17-2),
 		qml-module-qtquick2,
-		qml-module-qtquick-controls
+		qml-module-qtquick-controls,
+		qml-module-qtquick-controls2,
+		qml-module-org-kde-kirigami2
 Maintainer: Savoir-faire Linux
 Description: A UI installer to install SEAPATH distribution, based on the Calamares installer framework
