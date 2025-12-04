@@ -41,7 +41,6 @@ public:
 
     Calamares::JobList jobs() const override;
 
-    void setConfigurationMap( const QVariantMap& configurationMap ) override;
 
 private:
     Config* m_config;

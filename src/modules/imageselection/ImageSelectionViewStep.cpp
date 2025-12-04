@@ -96,8 +96,6 @@ ImageSelectionViewStep::isAtEnd() const
 void
 ImageSelectionViewStep::onActivate()
 {
-    m_config->doNotify();
-    connect( qApp, &QApplication::aboutToQuit, m_config, qOverload<>( &Config::doRestart ) );
 }
 
 void
@@ -219,12 +217,6 @@ Calamares::JobList
 ImageSelectionViewStep::jobs() const
 {
     return Calamares::JobList();
-}
-
-void
-ImageSelectionViewStep::setConfigurationMap( const QVariantMap& configurationMap )
-{
-    m_config->setConfigurationMap( configurationMap );
 }
 
 CALAMARES_PLUGIN_FACTORY_DEFINITION( ImageSelectionViewStepFactory, registerPlugin< ImageSelectionViewStep >(); )
