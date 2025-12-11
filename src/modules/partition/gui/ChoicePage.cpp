@@ -1010,6 +1010,16 @@ ChoicePage::updateActionChoicePreview( InstallChoice choice )
             targetDevice = selectedDevice();  // Refresh the targetDevice reference
         }
 
+        PartitionTable* pt = targetDevice ? targetDevice->partitionTable() : nullptr;
+        if ( !pt )
+        {
+            cDebug() << "No partition table found on device";
+            m_messageLabel->setText( tr( "This storage device has no partition table. "
+                                         "Partitions preview not available." ) );
+            m_messageLabel->show();
+            break;
+        }
+
         // Remove directly the partition table without creating jobs (preview only)
         cDebug() << "Removing all existing partitions from preview (no jobs created)";
         QList< Partition* > partitionsToDelete;
