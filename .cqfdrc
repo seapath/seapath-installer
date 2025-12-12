@@ -4,7 +4,7 @@ name='seapath-installer'
 
 [build]
 command='./build.sh'
-flavors='sfl_ci'
+flavors='ci'
 
-[sfl_ci]
+[ci]
 command='./build.sh'
