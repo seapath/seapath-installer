@@ -168,6 +168,7 @@ https://calamares.euroquis.nl/
 # Release notes
 ## Version 1.2.1
 * Fix segfault when no partitions are on the selected disk
+* Fix error when multiple lvm volume group are present on the machine
 
 ## Version 1.2.0
 * Fix slideshow image display
