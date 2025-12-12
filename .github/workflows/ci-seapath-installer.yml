@@ -38,4 +38,4 @@ jobs:
           cqfd init
       - name: Build seapath-installer
         run: |
-          cqfd -b sfl_ci
+          cqfd -b ci
