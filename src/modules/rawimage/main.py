@@ -172,19 +172,31 @@ def remove_volume_group(mount_point):
         )
     except subprocess.CalledProcessError:
         # Volume group does not exist; nothing to do
-        libcalamares.utils.error(f"Failed to list volume group on: {mount_point}")
+        libcalamares.utils.error("Failed to list volume groups")
         raise
 
-    vg_name = vg.stdout.strip()
+    for element in vg.stdout.split('\n'):
+        vg_name=element.strip()
+        if vg_name == "":
+            continue
 
-    if vg_name != "":
         try:
-            subprocess.run(
-                ["/usr/sbin/vgremove", "-y", vg_name], check=True
+            pv_name = subprocess.run(
+                ["vgs", "--noheadings", "-o", "pv_name", vg_name], check=True, capture_output=True, text=True
             )
         except subprocess.CalledProcessError:
-            libcalamares.utils.warning(f"Failed to disable volume group on: {mount_point}")
+            libcalamares.utils.error("Failed to list physical volume names")
             raise
+
+        # Check if volume group concerns the targeted disk
+        if mount_point in pv_name.stdout.strip():
+            try:
+                subprocess.run(
+                    ["/usr/sbin/vgremove", "-y", vg_name], check=True
+                )
+            except subprocess.CalledProcessError:
+                libcalamares.utils.warning(f"Failed to disable volume group on: {mount_point}")
+                raise
 
 
 def run():
