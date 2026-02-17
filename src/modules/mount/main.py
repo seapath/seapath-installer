@@ -130,7 +130,7 @@ def get_partitions(device_name, seapath_flavor):
             libcalamares.utils.error(f"Failed to list partitions of {device_name}.")
             raise
 
-        rootfs_partition_index = partitions.index("/dev/mapper/vg2-root")
+        rootfs_partition_index = partitions.index("/dev/mapper/vg1-root")
         rootfs_partition = partitions[rootfs_partition_index]
     else:
         rootfs_partition = partitions[3]
