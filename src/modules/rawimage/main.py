@@ -195,7 +195,7 @@ def remove_volume_group(mount_point):
                     ["/usr/sbin/vgremove", "-y", vg_name], check=True
                 )
             except subprocess.CalledProcessError:
-                libcalamares.utils.warning(f"Failed to disable volume group on: {mount_point}")
+                libcalamares.utils.error(f"Failed to disable volume group on: {mount_point}")
                 raise
 
 
