@@ -16,6 +16,7 @@
 import os
 import tempfile
 import subprocess
+import re
 
 import libcalamares
 
@@ -130,8 +131,15 @@ def get_partitions(device_name, seapath_flavor):
             libcalamares.utils.error(f"Failed to list partitions of {device_name}.")
             raise
 
-        rootfs_partition_index = partitions.index("/dev/mapper/vg1-root")
-        rootfs_partition = partitions[rootfs_partition_index]
+        rootfs_partition = next(
+            (p for p in partitions if re.match(r"^/dev/mapper/vg\d+-root$", p)),
+            None,
+        )
+        if not rootfs_partition:
+            libcalamares.utils.error(
+                "Failed to find root LVM partition matching /dev/mapper/vg*-root."
+            )
+            raise RuntimeError("Root LVM partition not found")
     else:
         rootfs_partition = partitions[3]
         persistent_partition = partitions[6]
