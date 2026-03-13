@@ -13,6 +13,7 @@
 
 #include "Config.h"
 #include "ui_ImageSelectionPage.h"
+#include "ui_SeapathFlavorSelection.h"
 #include "GlobalStorage.h"
 #include "JobQueue.h"
 
@@ -28,6 +29,9 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QtXml/QDomDocument>
+#include <QPointer>
+#include <QDialog>
+#include <QSignalBlocker>
 
 ImageSelectionPage::ImageSelectionPage( Config* config, QWidget* parent )
     : QWidget( parent )
@@ -67,6 +71,7 @@ ImageSelectionPage::ImageSelectionPage( Config* config, QWidget* parent )
         if ( changed->checkState(0) == Qt::Checked )
         {
             // Enforce single selection (optional)
+            const QSignalBlocker blocker( ui->treeWidget );
             for ( int i = 0; i < ui->treeWidget->topLevelItemCount(); ++i )
             {
                 auto* it = ui->treeWidget->topLevelItem( i );
@@ -89,11 +94,19 @@ ImageSelectionPage::ImageSelectionPage( Config* config, QWidget* parent )
                 selected << it->text(0);
                 selectedFiles << it->data( 0, Qt::UserRole ).toString(); // hidden path
                 cDebug() << "debug:" << selectedFiles;
+
+                seapathFlavor << it->text(1);
+                cDebug() << "Selected SEAPATH flavor:" << seapathFlavor;
+
+                gs->insert( "seapathFlavor", seapathFlavor[0] );
             }
         }
 
         cDebug() << "imageselection: selected images:" << selected;
         cDebug() << "imageselection: selected files:" << selectedFiles;
+
+        if (seapathFlavor.contains("Not available") )
+            confirmSeapathFlavor();
 
         if ( !selected.isEmpty() )
         {
@@ -101,7 +114,6 @@ ImageSelectionPage::ImageSelectionPage( Config* config, QWidget* parent )
 
             gs->insert( "imageselection.selected", selected );
             gs->insert( "imageselection.selectedFiles", selectedFiles );
-            gs->insert( "seapathFlavor", seapathFlavor[0] );
         }
 
         else{
@@ -212,11 +224,26 @@ ImageSelectionPage::scanAvailableImages()
             bmapFile.close();
             continue;
         }
-
-
     }
 }
 
+void
+ImageSelectionPage::confirmSeapathFlavor()
+{
+    QPointer< QDialog > dlg = new QDialog( this );
+    Ui_SeapathFlavorSelection ui;
+    auto* gs = Calamares::JobQueue::instance()->globalStorage();
+
+    ui.setupUi( dlg.data() );
+    dlg->exec();
+
+    auto seapathFlavor = ui.debianRadioButton->isChecked() ? "debian" : "yocto";
+    cDebug() << "Selected SEAPATH flavor:" << seapathFlavor;
+
+    gs->insert( "seapathFlavor", seapathFlavor );
+
+    delete dlg;
+}
 
 void
 ImageSelectionPage::focusInEvent( QFocusEvent* e )
