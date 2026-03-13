@@ -8,6 +8,7 @@ calamares_add_plugin(imageselection
         ImageSelectionViewStep.cpp
     UI
         ImageSelectionPage.ui
+        SeapathFlavorSelection.ui
     LINK_PRIVATE_LIBRARIES
         ${qtname}::DBus
         ${qtname}::Xml
