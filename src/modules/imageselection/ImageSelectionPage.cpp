@@ -27,6 +27,7 @@
 #include <QDir>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QtXml/QDomDocument>
 
 ImageSelectionPage::ImageSelectionPage( Config* config, QWidget* parent )
     : QWidget( parent )
@@ -77,6 +78,8 @@ ImageSelectionPage::ImageSelectionPage( Config* config, QWidget* parent )
         // Collect checked items
         QStringList selected;
         QStringList selectedFiles;     // hidden file paths
+        QStringList seapathFlavor;
+        auto* gs = Calamares::JobQueue::instance()->globalStorage();
 
         for ( int i = 0; i < ui->treeWidget->topLevelItemCount(); ++i )
         {
@@ -96,18 +99,9 @@ ImageSelectionPage::ImageSelectionPage( Config* config, QWidget* parent )
         {
             emit selectionChanged( !selected.isEmpty() );
 
-            auto* gs = Calamares::JobQueue::instance()->globalStorage();
             gs->insert( "imageselection.selected", selected );
             gs->insert( "imageselection.selectedFiles", selectedFiles );
-
-            if ( selected[0].toLower().contains("debian") )
-            {
-                gs->insert( "seapathFlavor", "debian" );
-            }
-            else
-            {
-                gs->insert( "seapathFlavor", "yocto" );
-            }
+            gs->insert( "seapathFlavor", seapathFlavor[0] );
         }
 
         else{
@@ -136,61 +130,86 @@ ImageSelectionPage::scanAvailableImages()
     {
         QString gz_image = fn;
         QString json = fn;
+        QString bmap = fn;
+        QString imageName;
+        QString imageDescription;
+        QString imageVersion;
+        QString imageFlavor;
+        auto* gs = Calamares::JobQueue::instance()->globalStorage();
 
-        json.replace(QRegularExpression("\\.(wic\\.gz|raw\\.gz|iso)$"), ".json");
+        bmap.replace(QRegularExpression("(\\.gz)$"), ".bmap");
         gz_image.replace(QRegularExpression("\\.json$"), ".gz");
 
         cDebug() << "imageselection: found" << fn;
-        cDebug() << "imageselection: looking for metadata file" << json;
-        cDebug() << "JSON path:" << dir.absoluteFilePath( json );
-        if ( !QFile::exists( dir.absoluteFilePath( json ) ) )
-        {
-            cDebug() << "imageselection: no metadata file found for" << fn;
-            // Not a JSON file, just add it with minimal info
-            QString name = fn;
-            name.replace(QRegularExpression("\\.(wic\\.gz|raw\\.gz|iso)$"), "");
-            cDebug() << "imageselection: found image" << name << "(non-JSON file)";
-            m_availableImages << name;
+        cDebug() << "imageselection: looking for bmap file" << bmap;
 
+        /* Bmap file not readable/not present
+        --> No metadata support, marked them as 'Not available'
+        */
+        if ( !QFile::exists( dir.absoluteFilePath( bmap ) ) )
+        {
+            cDebug() << "imageselection: no BMAP metadata file found for" << fn;
+            QString name = fn;
             auto* item = new QTreeWidgetItem( ui->treeWidget );
             item->setText( 0, name );
-            item->setText( 1, "-" );
-            item->setText( 2, "(no description available)" );
+            item->setText( 1, "Not available" );
+            item->setText( 2, "Not available" );
             item->setFlags( item->flags() | Qt::ItemIsUserCheckable );
             item->setCheckState( 0, Qt::Unchecked );
-
-            item->setData( 0, Qt::UserRole, dir.absoluteFilePath( gz_image ) );          // original file path
+            item->setData( 0, Qt::UserRole, dir.absoluteFilePath( fn ) ); // Checkbox metadata (hidden)
             continue;
         }
 
         else {
-            QFile jsonFile( dir.absoluteFilePath( json ) );
-            if ( !jsonFile.open( QIODevice::ReadOnly ) )
+            QFile bmapFile( dir.absoluteFilePath( bmap ) );
+            if ( !bmapFile.open( QIODevice::ReadOnly ) )
             {
-                cDebug() << "imageselection: cannot open JSON file" << jsonFile.fileName();
+                cDebug() << "imageselection: cannot open BMAP file" << bmapFile.fileName();
                 continue;
             }
 
-            QJsonParseError pe;
-            QJsonDocument doc = QJsonDocument::fromJson( jsonFile.readAll(), &pe );
+            QDomDocument xmlBMAP;
+            xmlBMAP.setContent(&bmapFile);
 
-            QJsonObject o = doc.object();
-            QString name = o.value( "name" ).toString( fn );
-            QString version = o.value( "version" ).toString( "-" );
-            QString description = o.value( "description" ).toString();
+            QDomElement root=xmlBMAP.documentElement();
 
-            cDebug() << "imageselection: found image" << name << version << description;
-            m_availableImages << name;
+            // Extract value of a XML tag field
+            auto getElementText = [](const QDomElement& parent, const QString& tag) -> QString {
+                QDomElement elem = parent.firstChildElement(tag);
+                return elem.text().trimmed();
+            };
+
+            // If XML tag do not exist mark the value as not available
+            auto checkEmptyElement = [](const QString& tag) -> QString {
+                if(tag == "")
+                    return "Not available";
+                return tag;
+            };
+
+            imageName = getElementText(root, "ImageName");
+
+            // If no image name defined print the image file name
+            if(imageName == "")
+                imageName = fn;
+
+            imageVersion = getElementText(root, "ImageVersion");
+            imageDescription = getElementText(root, "ImageDescription");
+            imageFlavor = getElementText(root, "ImageFlavor");
+
+            imageVersion = checkEmptyElement(imageVersion);
+            imageDescription = checkEmptyElement(imageDescription);
+            imageFlavor = checkEmptyElement(imageFlavor);
 
             auto* item = new QTreeWidgetItem( ui->treeWidget );
-            item->setText( 0, name );
-            item->setText( 1, version );
-            item->setText( 2, description );
+            item->setText( 0, imageName );
+            item->setText( 1, imageFlavor );
+            item->setText( 2, imageVersion );
+            item->setText( 3, imageDescription );
             item->setFlags( item->flags() | Qt::ItemIsUserCheckable );
             item->setCheckState( 0, Qt::Unchecked );
 
-            item->setData( 0, Qt::UserRole, dir.absoluteFilePath( fn ) );          // original JSON file path
-            jsonFile.close();
+            item->setData( 0, Qt::UserRole, dir.absoluteFilePath( fn ) );
+            bmapFile.close();
             continue;
         }
 
