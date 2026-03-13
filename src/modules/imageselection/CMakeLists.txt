@@ -10,6 +10,9 @@ calamares_add_plugin(imageselection
         ImageSelectionPage.ui
     LINK_PRIVATE_LIBRARIES
         ${qtname}::DBus
+        ${qtname}::Xml
         z
     SHARED_LIB
 )
+
+find_package(${qtname} ${QT_VERSION} COMPONENTS Xml)
