@@ -348,6 +348,7 @@ SetKeyboardLayoutJob::exec()
     Calamares::GlobalStorage* gs = Calamares::JobQueue::instance()->globalStorage();
 
     QString seapathFlavor = gs->value( "seapathFlavor" ).toString();
+    seapathFlavor = seapathFlavor.toLower();
 
     if (seapathFlavor == "yocto"){
         destDir = QDir( gs->value( "etcMountPoint" ).toString() );

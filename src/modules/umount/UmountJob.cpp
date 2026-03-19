@@ -139,6 +139,7 @@ UmountJob::exec()
         = Calamares::JobQueue::instance() ? Calamares::JobQueue::instance()->globalStorage() : nullptr;
 
     QString seapathFlavor = gs->value("seapathFlavor").toString();
+    seapathFlavor = seapathFlavor.toLower();
     if ( !gs )
     {
         return Calamares::JobResult::internalError(

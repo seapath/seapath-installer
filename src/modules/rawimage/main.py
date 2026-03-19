@@ -204,6 +204,7 @@ def run():
     gs = libcalamares.globalstorage
     image = gs.value("imageselection.selectedFiles")[0]
     seapath_flavor = libcalamares.globalstorage.value("seapathFlavor")
+    seapath_flavor = seapath_flavor.lower()
 
     libcalamares.utils.debug("SEAPATH flavor selected: {}".format(seapath_flavor))
     libcalamares.utils.debug(f"Selected image: {image}")
