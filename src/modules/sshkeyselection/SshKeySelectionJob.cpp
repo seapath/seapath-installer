@@ -24,6 +24,7 @@ SshKeySelectionJob::exec()
     QStringList users = { "admin", "ansible" };
     Calamares::GlobalStorage* gs = Calamares::JobQueue::instance()->globalStorage();
     QString seapathFlavor = gs->value( "seapathFlavor" ).toString();
+    seapathFlavor = seapathFlavor.toLower();
     cDebug() << "SshKeySelectionJob: Seapath flavor:" << seapathFlavor;
 
     if (seapathFlavor == "yocto"){

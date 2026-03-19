@@ -158,6 +158,8 @@ def run():
     os.makedirs(persistent_mount_point, exist_ok=True)
 
     seapath_flavor = libcalamares.globalstorage.value("seapathFlavor")
+    seapath_flavor = seapath_flavor.lower()
+
     rootfs_partition, persistent_partition = get_partitions(target_disk, seapath_flavor)
     mount_partition(rootfs_partition, rootfs0_mount_point)
 
