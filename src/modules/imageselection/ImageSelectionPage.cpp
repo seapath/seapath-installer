@@ -147,6 +147,7 @@ ImageSelectionPage::scanAvailableImages()
         QString imageDescription;
         QString imageVersion;
         QString imageFlavor;
+        QString imageSetup;
         auto* gs = Calamares::JobQueue::instance()->globalStorage();
 
         bmap.replace(QRegularExpression("(\\.gz)$"), ".bmap");
@@ -166,6 +167,8 @@ ImageSelectionPage::scanAvailableImages()
             item->setText( 0, name );
             item->setText( 1, "Not available" );
             item->setText( 2, "Not available" );
+            item->setText( 3, "Not available" );
+            item->setText( 4, "Not available" );
             item->setFlags( item->flags() | Qt::ItemIsUserCheckable );
             item->setCheckState( 0, Qt::Unchecked );
             item->setData( 0, Qt::UserRole, dir.absoluteFilePath( fn ) ); // Checkbox metadata (hidden)
@@ -207,16 +210,19 @@ ImageSelectionPage::scanAvailableImages()
             imageVersion = getElementText(root, "ImageVersion");
             imageDescription = getElementText(root, "ImageDescription");
             imageFlavor = getElementText(root, "ImageFlavor");
+            imageSetup = getElementText(root, "ImageSetup");
 
             imageVersion = checkEmptyElement(imageVersion);
             imageDescription = checkEmptyElement(imageDescription);
             imageFlavor = checkEmptyElement(imageFlavor);
+            imageSetup = checkEmptyElement(imageSetup);
 
             auto* item = new QTreeWidgetItem( ui->treeWidget );
             item->setText( 0, imageName );
             item->setText( 1, imageFlavor );
-            item->setText( 2, imageVersion );
-            item->setText( 3, imageDescription );
+            item->setText( 2, imageSetup );
+            item->setText( 3, imageVersion );
+            item->setText( 4, imageDescription );
             item->setFlags( item->flags() | Qt::ItemIsUserCheckable );
             item->setCheckState( 0, Qt::Unchecked );
 

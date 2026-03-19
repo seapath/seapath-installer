@@ -27,7 +27,7 @@
       <bool>true</bool>
      </property>
      <property name="columnCount">
-      <number>4</number>
+      <number>5</number>
      </property>
      <column>
       <property name="text">
@@ -37,6 +37,11 @@
      <column>
       <property name="text">
        <string>Flavor</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Setup</string>
       </property>
      </column>
      <column>
