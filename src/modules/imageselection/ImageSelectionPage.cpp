@@ -85,6 +85,7 @@ ImageSelectionPage::ImageSelectionPage( Config* config, QWidget* parent )
         QStringList selectedFiles;     // hidden file paths
         QStringList seapathFlavor;
         auto* gs = Calamares::JobQueue::instance()->globalStorage();
+        QStringList noBmap;
 
         for ( int i = 0; i < ui->treeWidget->topLevelItemCount(); ++i )
         {
@@ -97,6 +98,9 @@ ImageSelectionPage::ImageSelectionPage( Config* config, QWidget* parent )
 
                 seapathFlavor << it->text(1);
                 cDebug() << "Selected SEAPATH flavor:" << seapathFlavor;
+
+                noBmap << it->data( 1, Qt::UserRole ).toString();
+                cDebug() << "BMAP provided with image:" << seapathFlavor;
 
                 gs->insert( "seapathFlavor", seapathFlavor[0] );
             }
@@ -114,6 +118,7 @@ ImageSelectionPage::ImageSelectionPage( Config* config, QWidget* parent )
 
             gs->insert( "imageselection.selected", selected );
             gs->insert( "imageselection.selectedFiles", selectedFiles );
+            gs->insert( "noBmap", noBmap[0] );
         }
 
         else{
@@ -172,6 +177,7 @@ ImageSelectionPage::scanAvailableImages()
             item->setFlags( item->flags() | Qt::ItemIsUserCheckable );
             item->setCheckState( 0, Qt::Unchecked );
             item->setData( 0, Qt::UserRole, dir.absoluteFilePath( fn ) ); // Checkbox metadata (hidden)
+            item->setData( 1, Qt::UserRole, true ); // Checkbox metadata (hidden)
             continue;
         }
 
@@ -182,7 +188,7 @@ ImageSelectionPage::scanAvailableImages()
                 cDebug() << "imageselection: cannot open BMAP file" << bmapFile.fileName();
                 continue;
             }
-
+            gs->insert( "False", "noBmap" );
             QDomDocument xmlBMAP;
             xmlBMAP.setContent(&bmapFile);
 
@@ -227,6 +233,7 @@ ImageSelectionPage::scanAvailableImages()
             item->setCheckState( 0, Qt::Unchecked );
 
             item->setData( 0, Qt::UserRole, dir.absoluteFilePath( fn ) );
+            item->setData( 1, Qt::UserRole, false );
             bmapFile.close();
             continue;
         }
