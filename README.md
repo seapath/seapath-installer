@@ -166,6 +166,9 @@ For more information about the upstream Calamares project, visit
 https://calamares.euroquis.nl/
 
 # Release notes
+## Version 1.2.2
+* Remove version from welcome screen to avoid confusion between the version
+  of the installer and the version of the images
 ## Version 1.2.1
 * Fix segfault when no partitions are on the selected disk
 * Fix error when multiple lvm volume group are present on the machine

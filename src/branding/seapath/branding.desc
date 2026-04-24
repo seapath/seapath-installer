@@ -123,10 +123,10 @@ navigation: widget
 strings:
     productName:         "LFEnergy SEAPATH"
     shortProductName:    "SEAPATH"
-    version:             1.2.1
-    shortVersion:        1.2.1
-    versionedName:       LFEnergy SEAPATH 1.2.1
-    shortVersionedName:  SEAPATH 1.2.1
+    version:             1.2.2
+    shortVersion:        1.2.2
+    versionedName:       LFEnergy SEAPATH
+    shortVersionedName:  SEAPATH 1.2.2
     bootloaderEntryName: SEAPATH
     productUrl:          https://lfenergy.org/projects/seapath/
     supportUrl:          https://lf-energy.atlassian.net/wiki/spaces/SEAP/overview
