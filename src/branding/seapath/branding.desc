@@ -125,7 +125,7 @@ strings:
     shortProductName:    "SEAPATH"
     version:             1.2.1
     shortVersion:        1.2.1
-    versionedName:       LFEnergy SEAPATH 1.2.1
+    versionedName:       LFEnergy SEAPATH
     shortVersionedName:  SEAPATH 1.2.1
     bootloaderEntryName: SEAPATH
     productUrl:          https://lfenergy.org/projects/seapath/
