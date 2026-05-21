@@ -166,6 +166,11 @@ For more information about the upstream Calamares project, visit
 https://calamares.euroquis.nl/
 
 # Release notes
+## Version 2.0.0
+* Improve SEAPATH flavor detection
+* Change Welcome message to avoid confusion on patch releases
+* Allow to flash image without an associated bmap file
+
 ## Version 1.2.1
 * Fix segfault when no partitions are on the selected disk
 * Fix error when multiple lvm volume group are present on the machine
