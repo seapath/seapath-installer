@@ -16,6 +16,10 @@ on:
         description: Upload built deb as a GitHub Actions artifact.
   workflow_call:
     inputs:
+      ref:
+        type: string
+        required: false
+        description: Git ref to check out.
       upload_artifact:
         type: boolean
         required: false
@@ -27,7 +31,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.ref }}
       - name: Set up dependencies
         run: |
           sudo apt-get update
