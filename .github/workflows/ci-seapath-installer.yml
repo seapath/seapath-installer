@@ -8,6 +8,19 @@ on:
     types: [opened, reopened, synchronize]
     branches: [main]
   workflow_dispatch:
+    inputs:
+      upload_artifact:
+        type: boolean
+        required: false
+        default: false
+        description: Upload built deb as a GitHub Actions artifact.
+  workflow_call:
+    inputs:
+      upload_artifact:
+        type: boolean
+        required: false
+        default: false
+        description: Upload built deb as a GitHub Actions artifact.
 
 jobs:
   seapath-installer-build:
@@ -39,3 +52,10 @@ jobs:
       - name: Build seapath-installer
         run: |
           cqfd -b ci
+      - name: Upload deb artifact
+        if: ${{ inputs.upload_artifact == true }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: seapath-installer-deb
+          path: seapath-installer_*.deb
+          if-no-files-found: error
