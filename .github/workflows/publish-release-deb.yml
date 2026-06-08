@@ -2,7 +2,7 @@ name: Build and publish seapath-installer deb on release
 
 on:
   release:
-    types: [created]
+    types: [published]
 
 permissions:
   contents: write
