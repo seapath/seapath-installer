@@ -137,14 +137,14 @@ UmountJob::exec()
 
     Calamares::GlobalStorage* gs
         = Calamares::JobQueue::instance() ? Calamares::JobQueue::instance()->globalStorage() : nullptr;
-
-    QString seapathFlavor = gs->value("seapathFlavor").toString();
-    seapathFlavor = seapathFlavor.toLower();
     if ( !gs )
     {
         return Calamares::JobResult::internalError(
             "UMount", tr( "GlobalStorage is not available." ), Calamares::JobResult::InvalidConfiguration );
     }
+
+    QString seapathFlavor = gs->value("seapathFlavor").toString();
+    seapathFlavor = seapathFlavor.toLower();
 
     // Factorized list of mount point keys to process in order.
     const QList<QString> mountKeys { "rootMountPoint", "persistentMountPoint", "homeMountPoint", "etcMountPoint" };
