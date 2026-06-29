@@ -30,18 +30,12 @@ SshKeySelectionJob::exec()
     if (seapathFlavor == "yocto"){
         destDir = QDir( gs->value( "homeMountPoint" ).toString() );
     }
-
-    else if (seapathFlavor == "debian"){
+    else
+    {
         destDir = QDir( gs->value( "rootMountPoint" ).toString() );
         destDir.cd("home");
-        cDebug() << "SshKeySelectionJob: Debian root mount point:" << destDir.absolutePath();
     }
-    else {
-        cError() << "SshKeySelectionJob: Unknown Seapath flavor:" << seapathFlavor;
-        return Calamares::JobResult::error(
-            tr("Failed to determine Seapath flavor.", "@error"),
-            tr("Unknown Seapath flavor: %1.", "@error, %1 is the Seapath flavor").arg(seapathFlavor));
-    }
+    cDebug() << "SshKeySelectionJob: Mount point:" << destDir.absolutePath();
 
     for (const QString& user : users) {
         dotSSHConfPath.append(destDir.absoluteFilePath(user + QStringLiteral("/.ssh")));
