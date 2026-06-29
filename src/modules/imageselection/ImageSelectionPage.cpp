@@ -250,7 +250,20 @@ ImageSelectionPage::confirmSeapathFlavor()
     ui.setupUi( dlg.data() );
     dlg->exec();
 
-    auto seapathFlavor = ui.debianRadioButton->isChecked() ? "debian" : "yocto";
+    QString seapathFlavor;
+
+    if ( ui.debianRadioButton->isChecked() )
+    {
+        seapathFlavor = "debian";
+    }
+    else if ( ui.slesRadioButton->isChecked() )
+    {
+        seapathFlavor = "sles";
+    }
+    else
+    {
+        seapathFlavor = "yocto";
+    }
     cDebug() << "Selected SEAPATH flavor:" << seapathFlavor;
 
     gs->insert( "seapathFlavor", seapathFlavor );

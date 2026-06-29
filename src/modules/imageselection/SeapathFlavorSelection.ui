@@ -62,6 +62,13 @@
     </widget>
    </item>
    <item row="5" column="0">
+    <widget class="QRadioButton" name="slesRadioButton">
+     <property name="text">
+      <string>SEAPATH SLES</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="enabled">
       <bool>true</bool>
