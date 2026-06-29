@@ -352,10 +352,9 @@ SetKeyboardLayoutJob::exec()
 
     if (seapathFlavor == "yocto"){
         destDir = QDir( gs->value( "etcMountPoint" ).toString() );
-
     }
-
-    else if (seapathFlavor == "debian"){
+    else
+    {
         destDir = QDir( gs->value( "rootMountPoint" ).toString() );
         destDir.cd( "etc" );
     }
