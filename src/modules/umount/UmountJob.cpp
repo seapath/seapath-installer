@@ -152,7 +152,7 @@ UmountJob::exec()
     {
         QString mp = gs->value( key ).toString();
 
-        if (seapathFlavor == "debian" && key == "persistentMountPoint") {
+        if (seapathFlavor != "yocto" && key == "persistentMountPoint") {
             // Persistent mount point is exclusive of Yocto flavor
             continue;
         }
