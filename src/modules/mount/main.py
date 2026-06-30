@@ -96,8 +96,8 @@ def get_partitions(device_name, seapath_flavor):
     nvme0n1p4
     nvme0n1p5
     nvme0n1p6
-    If the flavor is debian, roofs is the second one. If the flavor is seapath
-    rootfs is third and the persistentfs is sixth.
+    If the flavor is yocto, rootfs is third partition and the persistentfs is the sixth.
+    For other flavors, the second partition is a volume group containing the rootfs as a logical volume.
 
     Returns rootfs and persistent partitions name as string.
     """
@@ -115,7 +115,11 @@ def get_partitions(device_name, seapath_flavor):
 
     libcalamares.utils.debug(f"List of partitions for {device_name}: {partitions}")
     persistent_partition = ""
-    if seapath_flavor == "debian":
+
+    if seapath_flavor == "yocto":
+        rootfs_partition = partitions[3]
+        persistent_partition = partitions[6]
+    else:
         enable_lv()
 
         # We need to refresh the partition list after enabling LVM
@@ -140,9 +144,7 @@ def get_partitions(device_name, seapath_flavor):
                 "Failed to find root LVM partition matching /dev/mapper/vg*-root."
             )
             raise RuntimeError("Root LVM partition not found")
-    else:
-        rootfs_partition = partitions[3]
-        persistent_partition = partitions[6]
+
     return rootfs_partition, persistent_partition
 
 
