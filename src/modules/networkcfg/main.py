@@ -131,12 +131,12 @@ def run():
     seapath_flavor = libcalamares.globalstorage.value("seapathFlavor")
     seapath_flavor = seapath_flavor.lower()
 
-    if seapath_flavor == "debian":
+    if seapath_flavor == "yocto":
+        etc_mount_point = libcalamares.globalstorage.value("etcMountPoint")
+    else:
         root_mount_point = libcalamares.globalstorage.value("rootMountPoint")
         etc_mount_point = root_mount_point + "/etc"
         remove_default_network_file(etc_mount_point)
-    else:
-        etc_mount_point = libcalamares.globalstorage.value("etcMountPoint")
 
     if etc_mount_point is None:
         libcalamares.utils.warning(
